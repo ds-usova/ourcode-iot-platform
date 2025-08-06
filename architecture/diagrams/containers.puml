@@ -47,9 +47,9 @@ System_Boundary(system, "IoT Monitoring System") {
     Rel(event_collector, kafka, "Publishes to \n[events, device-id, dlt] topics")
     Rel(event_collector, event_db, "Writes events")
 
-    Rel(device_collector, kafka, "Consumes [device-id] topic")
+    Rel(device_collector, kafka, "Consumes \n[device-id]\n topic")
 
-    Rel(failed_event_processor, kafka, "Consumes [dlt] topic")
+    Rel(failed_event_processor, kafka, "Consumes \n[dlt]\n topic")
     Rel(failed_event_processor, minio, "Writes failed events (JSON)")
 
     ' Force layout with hidden relations
