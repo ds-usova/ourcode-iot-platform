@@ -1,8 +1,7 @@
 services:
   postgres:
-    container_name: postgres_db
     image: postgres:17.5
-    restart: unless-stopped
+    container_name: postgres_db
     environment:
       POSTGRES_DB: ${POSTGRES_DB_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -25,10 +24,40 @@ services:
     networks:
       - backend
 
+  redis:
+    image: redis:8.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis_insight:
+    image: redis/redisinsight:latest
+    container_name: redis_insight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redis_insight_data:/data
+    networks:
+      - backend
+    depends_on:
+      redis:
+        condition: service_healthy
+
 volumes:
   postgres_data:
     name: ourcode-iot-postgres-data
+  redis_insight_data:
+    name: ourcode-iot-redis-insight-data
 
 networks:
   backend:
     name: ourcode-iot-backend
+    driver: bridge
