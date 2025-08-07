@@ -5,7 +5,7 @@
 UpdateElementStyle("container", $borderColor="#444444")
 UpdateElementStyle("external_container", $borderColor="#444444")
 
-System_Boundary(system, "IoT Monitoring System") {
+System_Boundary(system, "IoT Monitoring System - Container Diagram") {
 
     ' Containers
     Container(gateway, "API Gateway", "Spring Cloud Gateway", "Routing and authorization")

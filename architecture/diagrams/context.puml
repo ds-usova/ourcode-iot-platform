@@ -1,0 +1,24 @@
+@startuml Context
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title IoT Microservice Platform - Context Diagram
+
+' Internal
+System(System_IoT, "IoT Microservice Platform")
+Person(engineer, "Devops engineer", "Sets up and maintains IoT platform")
+
+' External systems
+System_Ext(device, "IoT device", "Sensors and actuators")
+System_Ext(keycloak, "Keycloak", "Authentication (SSO)")
+System_Ext(grafana, "Grafana", "Monitoring and dashboards")
+
+' Relations
+Rel_Up(engineer, System_IoT, "Monitors and manages", "HTTP/REST, UI")
+Rel_Right(engineer, grafana, "Views dashboards", "HTTP")
+
+Rel_Right(System_IoT, keycloak, "Requests token and verifies JWT", "OIDC")
+Rel_Down(System_IoT, grafana, "Exports metrics and logs", "Prometheus, Loki")
+Rel_Up(System_IoT, device, "Sends commands", "MQTT/HTTP")
+
+Rel(device, System_IoT, "Sends telemetry", "MQTT/HTTP")
+@enduml
