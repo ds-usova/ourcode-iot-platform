@@ -29,13 +29,16 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    environment:
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - backend
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 40s
 
   redis_insight:
@@ -51,11 +54,31 @@ services:
       redis:
         condition: service_healthy
 
+  cassandra:
+    image: cassandra:5.0
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: ${CASSANDRA_CLUSTER_NAME}
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    networks:
+        - backend
+    healthcheck:
+        test: ["CMD", "cqlsh", "-e", "SHOW HOST"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+        start_period: 60s
+
 volumes:
   postgres_data:
     name: ourcode-iot-postgres-data
   redis_insight_data:
     name: ourcode-iot-redis-insight-data
+  cassandra_data:
+    name: ourcode-iot-cassandra-data
 
 networks:
   backend:
