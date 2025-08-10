@@ -136,6 +136,25 @@ services:
     depends_on:
       - kafka
 
+  minio:
+    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    networks:
+      - backend
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      retries: 5
+
 volumes:
   postgres_data:
     name: ourcode-iot-postgres-data
@@ -143,6 +162,8 @@ volumes:
     name: ourcode-iot-redis-insight-data
   cassandra_data:
     name: ourcode-iot-cassandra-data
+  minio_data:
+    name: ourcode-iot-minio-data
 
 networks:
   backend:
