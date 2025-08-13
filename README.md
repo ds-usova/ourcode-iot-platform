@@ -37,7 +37,8 @@ ourcode-iot-platform/
 │       │   │   └── provisioning/    # Grafana provisioning files
 │       │   └── prometheus.yaml      # Prometheus configuration
 │       ├── .env.example             # Example environment variables
-│       └── docker-compose.yaml      
+│       ├── docker-compose.yaml    
+│       └── Makefile                # Makefile for managing the platform
 ├── .gitignore              
 └── README.md            
 ```
