@@ -97,6 +97,7 @@ services:
       retries: 5
       start_period: 10s
 
+  # Kafka
   kafka:
     image: bitnami/kafka:3.9.0
     container_name: kafka
@@ -116,6 +117,22 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  kafka-init:
+    image: bitnami/kafka:3.9.0
+    container_name: kafka_init
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+    networks:
+      - backend
+    volumes:
+      - ./kafka/create-topics.sh:/create-topics.sh
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: [ "/create-topics.sh" ]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: "no"
 
   schema-registry:
     image: bitnami/schema-registry:8.0
