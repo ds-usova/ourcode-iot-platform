@@ -1,4 +1,4 @@
-package org.ourcode.eventcollector.kafka.listener;
+package org.ourcode.eventcollector.kafka;
 
 import com.ourcode.avro.DeviceEvent;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
