@@ -19,7 +19,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ./db/init-postgres.sh:/docker-entrypoint-initdb.d/init-db.sh
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NAME}" ]
       interval: 10s
@@ -80,6 +80,17 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  cassandra-load-keyspace:
+    image: cassandra:5.0
+    container_name: cassandra-load-keyspace
+    depends_on:
+      - cassandra
+    networks:
+      - backend
+    volumes:
+      - ./db/init-cassandra.cql:/schema.cql
+    command: /bin/bash -c "cqlsh cassandra -f /schema.cql"
 
   zookeeper:
     image: bitnami/zookeeper:3.9.3
