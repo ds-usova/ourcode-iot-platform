@@ -2,7 +2,7 @@
 set -e
 
 BOOTSTRAP_SERVER=kafka:9092
-KAFKA_BIN=/opt/bitnami/kafka/bin
+KAFKA_BIN=/opt/kafka/bin
 
 echo "Creating Kafka topics on $BOOTSTRAP_SERVER ..."
 

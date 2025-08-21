@@ -92,53 +92,34 @@ services:
       - ./db/init-cassandra.cql:/schema.cql
     command: /bin/bash -c "cqlsh cassandra -f /schema.cql"
 
-  zookeeper:
-    image: bitnami/zookeeper:3.9.3
-    container_name: zookeeper
-    environment:
-      ALLOW_ANONYMOUS_LOGIN: yes
-    ports:
-      - "2181:2181"
-    networks:
-      - backend
-    healthcheck:
-      test: [ "CMD", "zkCli.sh", "-server", "localhost:2181", "ls", "/" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   # Kafka
   kafka:
-    image: bitnami/kafka:3.9.0
+    image: apache/kafka:3.9.1
     container_name: kafka
     ports:
       - "9092:9092"
       - "29092:29092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CFG_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
-      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
-      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,CONTROLLER://:9093,EXTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - backend
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     healthcheck:
-      test: [ "CMD", "/opt/bitnami/kafka/bin/kafka-topics.sh", "--bootstrap-server", "kafka:9092", "--list" ]
+      test: [ "CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list" ]
       interval: 30s
       timeout: 10s
       retries: 5
 
   kafka-init:
-    image: bitnami/kafka:3.9.0
+    image: apache/kafka:3.9.1
     container_name: kafka_init
-    environment:
-      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
     networks:
       - backend
     volumes:
