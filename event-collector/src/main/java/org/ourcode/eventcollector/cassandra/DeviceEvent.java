@@ -8,6 +8,7 @@ import org.springframework.data.cassandra.core.mapping.Table;
 public class DeviceEvent {
 
     @PrimaryKey
+    @Column("event_id")
     private final String eventId;
 
     @Column("device_id")
