@@ -7,7 +7,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EventListener {
+public class EventsKafkaListener {
 
     @KafkaListener(topics = "events", groupId = "${spring.kafka.consumer.group-id}")
     public void listen(ConsumerRecord<String, DeviceEvent> record, Acknowledgment ack) {

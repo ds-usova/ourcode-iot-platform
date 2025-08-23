@@ -13,6 +13,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 import org.ourcode.eventcollector.EventCollectorApplication;
+import org.ourcode.eventcollector.cassandra.DeviceEventEntity;
 import org.ourcode.eventcollector.cassandra.DeviceEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -88,7 +89,7 @@ public class KafkaListenerTest {
     @Test
     public void testKafkaListener() throws Exception {
         // Create initial records in Cassandra
-        repository.insert(new org.ourcode.eventcollector.cassandra.DeviceEvent("event1", "device1", System.currentTimeMillis(), "type1", "{\"key\":\"value\"}"));
+        repository.insert(new DeviceEventEntity("event1", "device1", System.currentTimeMillis(), "type1", "{\"key\":\"value\"}"));
 
         int schemaId = getSchemaId();
         System.out.println("Registered schema with ID: " + schemaId);
