@@ -9,6 +9,12 @@ group = "org.ourcode"
 version = "$appVersion"
 description = "event-collector"
 
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
@@ -23,15 +29,26 @@ repositories {
 }
 
 dependencies {
+    // Spring boot
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-data-cassandra"
     implementation "org.springframework.boot:spring-boot-starter-security"
     implementation "org.springframework.boot:spring-boot-starter-web"
 
+    // Kafka
     implementation "org.springframework.kafka:spring-kafka"
     implementation "io.confluent:kafka-avro-serializer:${kafkaAvroSerializerVersion}"
     implementation "org.apache.avro:avro:${avroVersion}"
 
+    // Lombok
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    // Logging
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+
+    // Test
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.springframework.boot:spring-boot-testcontainers"
     testImplementation "org.springframework.kafka:spring-kafka-test"
@@ -40,11 +57,15 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter"
     testImplementation "org.testcontainers:kafka"
 
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 tasks.named("test") {
     useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.annotationProcessorPath = configurations.annotationProcessor
 }
 
 avro {
