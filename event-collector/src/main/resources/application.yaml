@@ -16,6 +16,11 @@ spring:
         max.poll.interval.ms: 300000
         session.timeout.ms: 10000
         heartbeat.interval.ms: 3000
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: http://localhost:8081
 
   cassandra:
     keyspace-name: iot_schema

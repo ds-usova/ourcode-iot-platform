@@ -14,11 +14,13 @@ System_Boundary(system, "Event collector") {
     ContainerDb(event_db, "Events Database", "Cassandra Cluster")
     ContainerQueue(events_topic, "Events topic", "Apache Kafka")
     ContainerQueue(devices_topic, "Devices topic", "Apache Kafka")
+    ContainerQueue(dlt_topic, "DLT Event topic", "Apache Kafka")
 
     ' External containers
 
     ' Relations
     Rel_L(event_collector, events_topic, "Reads events")
+    Rel_D(event_collector, dlt_topic, "Writes events that could not be processed")
     Rel_D(event_collector, event_db, "Stores events")
     Rel_R(event_collector, devices_topic, "Writes unique device IDs")
 }

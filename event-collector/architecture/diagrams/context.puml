@@ -4,7 +4,7 @@
 title Event Collector - Context Diagram
 
 ' Internal
-System(event_collector, "Event collector", "Processes and events from IoT devices")
+System(event_collector, "Event Collector", "Processes and events from IoT devices")
 
 ' External systems
 System_Ext(iot_device, "IoT devices", "Sensors and actuators")

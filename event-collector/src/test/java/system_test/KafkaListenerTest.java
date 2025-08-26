@@ -78,9 +78,10 @@ public class KafkaListenerTest {
         String schemaRegistryUrl = "http://" + schemaRegistry.getHost() + ":" + schemaRegistry.getMappedPort(8081);
         
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-        registry.add("spring.kafka.schema-registry.url", () -> schemaRegistryUrl);
         registry.add("spring.kafka.consumer.properties.schema.registry.url", () -> schemaRegistryUrl);
+        registry.add("spring.kafka.producer.properties.schema.registry.url", () -> schemaRegistryUrl);
         registry.add("spring.cassandra.port", () -> cassandra.getMappedPort(9042));
+        registry.add("spring.cassandra.contact-points", cassandra::getHost);
     }
 
     @Autowired
@@ -91,8 +92,8 @@ public class KafkaListenerTest {
         // Create initial records in Cassandra
         repository.insert(new DeviceEventEntity("event1", "device1", System.currentTimeMillis(), "type1", "{\"key\":\"value\"}"));
 
-        int schemaId = getSchemaId();
-        System.out.println("Registered schema with ID: " + schemaId);
+        int eventSchemaId = registerSchema(DeviceEvent.getClassSchema(), "events");
+        System.out.println("Registered schema with ID: " + eventSchemaId);
 
         // Create Kafka producer properties
         Properties props = new Properties();
@@ -121,13 +122,17 @@ public class KafkaListenerTest {
         }
     }
 
-    private static int getSchemaId() throws IOException, RestClientException {
+    private static int registerSchema(Schema schema, String topic) {
         String schemaRegistryUrl = "http://" + schemaRegistry.getHost() + ":" + schemaRegistry.getFirstMappedPort();
         SchemaRegistryClient schemaRegistryClient = new CachedSchemaRegistryClient(schemaRegistryUrl, 1000);
 
-        Schema schema = DeviceEvent.getClassSchema();
-        String subject = "events-value";
+        String subject = topic + "-value";
 
-        return schemaRegistryClient.register(subject, new AvroSchema(schema));
+        try {
+            return schemaRegistryClient.register(subject, new AvroSchema(schema));
+        } catch (IOException | RestClientException e) {
+            throw new RuntimeException("Failed to register schema", e);
+        }
     }
+
 }

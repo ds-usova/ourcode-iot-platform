@@ -18,6 +18,11 @@ spring:
         heartbeat.interval.ms: 3000
         spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
         spring.deserializer.value.delegate.class: io.confluent.kafka.serializers.KafkaAvroDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: http://localhost:8081
 
   cassandra:
     keyspace-name: iot_schema
@@ -25,3 +30,10 @@ spring:
     port: 9042
     schema-action: none
     local-datacenter: datacenter1
+
+logging:
+  level:
+    root: WARN
+    org.springframework: WARN
+    org.apache.kafka: WARN
+    org.ourcode: DEBUG
