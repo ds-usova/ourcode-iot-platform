@@ -1,0 +1,17 @@
+@startuml Context
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Event Collector - Context Diagram
+
+' Internal
+System(event_collector, "Event collector", "Processes and events from IoT devices")
+
+' External systems
+System_Ext(iot_device, "IoT devices", "Sensors and actuators")
+System_Ext(device_collector, "Device collector", "Processes device IDs")
+
+' Relations
+Rel_L(event_collector, iot_device, "Reads telemetry", "MQTT")
+Rel_L(device_collector, event_collector, "Reads device IDs", "MQTT")
+
+@enduml

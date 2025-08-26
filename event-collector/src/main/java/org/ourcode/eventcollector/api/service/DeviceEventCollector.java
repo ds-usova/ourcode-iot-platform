@@ -1,4 +1,4 @@
-package org.ourcode.eventcollector.api;
+package org.ourcode.eventcollector.api.service;
 
 import org.ourcode.eventcollector.api.model.DeviceEvent;
 

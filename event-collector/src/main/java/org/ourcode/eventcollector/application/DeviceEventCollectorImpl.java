@@ -1,7 +1,7 @@
-package org.ourcode.eventcollector.service;
+package org.ourcode.eventcollector.application;
 
 import lombok.extern.slf4j.Slf4j;
-import org.ourcode.eventcollector.api.DeviceEventCollector;
+import org.ourcode.eventcollector.api.service.DeviceEventCollector;
 import org.ourcode.eventcollector.api.gateway.DeviceEventGateway;
 import org.ourcode.eventcollector.api.gateway.DeviceRegistry;
 import org.ourcode.eventcollector.api.gateway.DevicePublisher;

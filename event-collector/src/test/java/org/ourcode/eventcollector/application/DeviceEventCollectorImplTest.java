@@ -1,4 +1,4 @@
-package org.ourcode.eventcollector.service;
+package org.ourcode.eventcollector.application;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
