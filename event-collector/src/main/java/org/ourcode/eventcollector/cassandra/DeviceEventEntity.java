@@ -1,18 +1,18 @@
 package org.ourcode.eventcollector.cassandra;
 
 import org.ourcode.eventcollector.api.model.DeviceEvent;
+import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
 import org.springframework.data.cassandra.core.mapping.Column;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
+import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 @Table("device_events_by_device")
 public class DeviceEventEntity {
 
-    @PrimaryKey
-    @Column("event_id")
+    @PrimaryKeyColumn(name = "event_id", type = PrimaryKeyType.CLUSTERED)
     private final String eventId;
 
-    @Column("device_id")
+    @PrimaryKeyColumn(name = "device_id", type = PrimaryKeyType.PARTITIONED)
     private final String deviceId;
 
     /**
