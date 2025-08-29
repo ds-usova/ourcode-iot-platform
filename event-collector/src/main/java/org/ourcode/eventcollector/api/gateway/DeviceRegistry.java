@@ -12,4 +12,10 @@ public interface DeviceRegistry {
      */
     boolean registerIfNotExists(DeviceEvent deviceEvent);
 
+    /**
+     * Unregister device with given id from registry
+     * @param deviceEvent device event
+     */
+    void unregister(DeviceEvent deviceEvent);
+
 }

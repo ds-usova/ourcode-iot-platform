@@ -32,8 +32,6 @@ dependencies {
     // Spring boot
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-data-cassandra"
-    implementation "org.springframework.boot:spring-boot-starter-security"
-    implementation "org.springframework.boot:spring-boot-starter-web"
 
     // Kafka
     implementation "org.springframework.kafka:spring-kafka"
@@ -52,7 +50,6 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.springframework.boot:spring-boot-testcontainers"
     testImplementation "org.springframework.kafka:spring-kafka-test"
-    testImplementation "org.springframework.security:spring-security-test"
     testImplementation "org.testcontainers:cassandra"
     testImplementation "org.testcontainers:junit-jupiter"
     testImplementation "org.testcontainers:kafka"

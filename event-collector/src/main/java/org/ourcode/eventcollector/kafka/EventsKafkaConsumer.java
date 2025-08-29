@@ -16,11 +16,11 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class EventsKafkaListener {
+public class EventsKafkaConsumer {
 
     private final DeviceEventCollector deviceEventCollector;
 
-    public EventsKafkaListener(
+    public EventsKafkaConsumer(
             DeviceEventCollector deviceEventCollector
     ) {
         this.deviceEventCollector = deviceEventCollector;
@@ -35,7 +35,7 @@ public class EventsKafkaListener {
             topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
             dltStrategy = DltStrategy.ALWAYS_RETRY_ON_ERROR
     )
-    @KafkaListener(topics = "events", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${app.kafka.topics.events}", groupId = "${spring.kafka.consumer.group-id}")
     public void listen(
             @Header(KafkaHeaders.RECEIVED_TOPIC) String receivedTopic,
             ConsumerRecord<String, DeviceEvent> record,

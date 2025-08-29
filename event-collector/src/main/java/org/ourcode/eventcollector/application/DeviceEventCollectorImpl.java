@@ -1,6 +1,7 @@
 package org.ourcode.eventcollector.application;
 
 import lombok.extern.slf4j.Slf4j;
+import org.ourcode.eventcollector.api.exception.MessageNotPublishedException;
 import org.ourcode.eventcollector.api.service.DeviceEventCollector;
 import org.ourcode.eventcollector.api.gateway.DeviceEventGateway;
 import org.ourcode.eventcollector.api.gateway.DeviceRegistry;
@@ -16,9 +17,10 @@ public class DeviceEventCollectorImpl implements DeviceEventCollector {
     private final DeviceRegistry deviceRegistry;
     private final DevicePublisher devicePublisher;
 
-    public DeviceEventCollectorImpl(DeviceEventGateway deviceEventGateway,
-                                    DeviceRegistry deviceRegistry,
-                                    DevicePublisher devicePublisher
+    public DeviceEventCollectorImpl(
+            DeviceEventGateway deviceEventGateway,
+            DeviceRegistry deviceRegistry,
+            DevicePublisher devicePublisher
     ) {
         this.deviceEventGateway = deviceEventGateway;
         this.deviceRegistry = deviceRegistry;
@@ -30,8 +32,14 @@ public class DeviceEventCollectorImpl implements DeviceEventCollector {
         log.debug("Collecting device event: {}", deviceEvent);
 
         deviceEventGateway.save(deviceEvent);
-        if (deviceRegistry.registerIfNotExists(deviceEvent)) {
+        if (!deviceRegistry.registerIfNotExists(deviceEvent)) {
+            return;
+        }
+
+        try {
             devicePublisher.publish(deviceEvent);
+        } catch (MessageNotPublishedException e) {
+            deviceRegistry.unregister(deviceEvent);
         }
     }
 

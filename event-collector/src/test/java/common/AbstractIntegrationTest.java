@@ -26,7 +26,8 @@ public abstract class AbstractIntegrationTest {
 
     @Container
     static final KafkaContainer kafka = new KafkaContainer(
-            DockerImageName.parse("apache/kafka:3.9.1").asCompatibleSubstituteFor("confluentinc/cp-kafka")
+            DockerImageName.parse("apache/kafka:3.9.1")
+                           .asCompatibleSubstituteFor("confluentinc/cp-kafka")
     )
             .withNetwork(network)
             .withNetworkAliases("kafka")

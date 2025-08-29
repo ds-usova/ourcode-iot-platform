@@ -19,4 +19,9 @@ public class InMemoryCacheDeviceRegistry implements DeviceRegistry {
         return deviceIds.add(deviceEvent.deviceId());
     }
 
+    @Override
+    public void unregister(DeviceEvent deviceEvent) {
+        deviceIds.remove(deviceEvent.deviceId());
+    }
+
 }

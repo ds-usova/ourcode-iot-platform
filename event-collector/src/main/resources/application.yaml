@@ -22,6 +22,8 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      retries: 5
+      retry-backoff-ms: 1000
       properties:
         schema.registry.url: http://localhost:8081
 
@@ -31,3 +33,9 @@ spring:
     port: 9042
     schema-action: none
     local-datacenter: datacenter1
+
+app:
+  kafka:
+    topics:
+      events: events
+      devices: device-ids

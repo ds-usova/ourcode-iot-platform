@@ -51,4 +51,20 @@ class InMemoryCacheDeviceRegistryTest {
         assertThat(secondRegistration).isFalse();
     }
 
+    @Test
+    @DisplayName("unregister - should remove registered device")
+    void unregister_RemovesRegisteredDevice() {
+        // Given: device is registered
+        DeviceEvent deviceEvent = mock(DeviceEvent.class);
+        when(deviceEvent.deviceId()).thenReturn("device-1");
+        target.registerIfNotExists(deviceEvent);
+
+        // When: unregister the device
+        target.unregister(deviceEvent);
+
+        // Then: device should no longer be registered (can be registered again)
+        boolean reregistered = target.registerIfNotExists(deviceEvent);
+        assertThat(reregistered).isTrue();
+    }
+
 }
