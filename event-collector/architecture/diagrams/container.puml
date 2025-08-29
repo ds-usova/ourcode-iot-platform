@@ -16,7 +16,6 @@ System_Boundary(system, "Event collector") {
     ContainerQueue(devices_topic, "Devices topic", "Apache Kafka")
     ContainerQueue(dlt_topic, "DLT Event topic", "Apache Kafka")
 
-    ' External containers
 
     ' Relations
     Rel_L(event_collector, events_topic, "Reads events")
@@ -25,6 +24,7 @@ System_Boundary(system, "Event collector") {
     Rel_R(event_collector, devices_topic, "Writes unique device IDs")
 }
 
+' External containers
 Container_Ext(iot_devices, "IoT Devices", "Embedded devices")
 Container_Ext(device_collector, "Device Collector", "Spring Boot", "Processes device IDs")
 

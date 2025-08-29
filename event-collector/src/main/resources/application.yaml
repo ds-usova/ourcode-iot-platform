@@ -1,4 +1,7 @@
 spring:
+  threads:
+    virtual:
+      enabled: true
   kafka:
     bootstrap-servers: localhost:29092
     admin:
