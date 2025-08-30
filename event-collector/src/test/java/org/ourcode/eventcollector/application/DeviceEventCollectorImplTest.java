@@ -2,9 +2,6 @@ package org.ourcode.eventcollector.application;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.ourcode.eventcollector.api.gateway.DeviceEventGateway;
 import org.ourcode.eventcollector.api.gateway.DevicePublisher;
 import org.ourcode.eventcollector.api.gateway.DeviceRegistry;
@@ -12,22 +9,22 @@ import org.ourcode.eventcollector.api.model.DeviceEvent;
 
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class DeviceEventCollectorImplTest {
 
-    @Mock
     private DeviceEventGateway deviceEventGateway;
 
-    @Mock
     private DeviceRegistry deviceRegistry;
 
-    @Mock
     private DevicePublisher devicePublisher;
 
     private DeviceEventCollectorImpl deviceEventCollector;
 
     @BeforeEach
     void setUp() {
+        deviceEventGateway = mock(DeviceEventGateway.class);
+        deviceRegistry = mock(DeviceRegistry.class);
+        devicePublisher = mock(DevicePublisher.class);
+
         deviceEventCollector = new DeviceEventCollectorImpl(deviceEventGateway, deviceRegistry, devicePublisher);
     }
 
