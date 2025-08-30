@@ -37,3 +37,10 @@ logging:
     org.springframework: WARN
     org.apache.kafka: WARN
     org.ourcode: DEBUG
+    common: DEBUG
+
+app:
+  kafka:
+    topics:
+      events: events
+      devices: device-ids

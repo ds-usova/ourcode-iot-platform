@@ -35,7 +35,7 @@ public class KafkaDevicePublisher implements DevicePublisher {
 
     @Override
     public void publish(DeviceEvent deviceEvent) {
-        log.debug("Publishing device with id={}", deviceEvent.deviceId());
+        log.debug("Publishing device with id={} to topic {}", deviceEvent.deviceId(), topic);
 
         String key = deviceEvent.deviceId();
         Device value = toAvroDevice(deviceEvent);
