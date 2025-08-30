@@ -37,10 +37,10 @@ public class KafkaDevicePublisher implements DevicePublisher {
     public void publish(DeviceEvent deviceEvent) {
         log.debug("Publishing device with id={}", deviceEvent.deviceId());
 
-        try {
-            String key = deviceEvent.deviceId();
-            Device value = toAvroDevice(deviceEvent);
+        String key = deviceEvent.deviceId();
+        Device value = toAvroDevice(deviceEvent);
 
+        try {
             ProducerRecord<String, Object> record = createProducerRecord(topic, key, value);
 
             kafkaTemplate.send(record)
@@ -53,6 +53,8 @@ public class KafkaDevicePublisher implements DevicePublisher {
 
         } catch (Exception e) {
             log.error("Failed to send message to topic: {}, key: {}", topic, deviceEvent.deviceId(), e);
+
+            handleError(key, deviceEvent, e);
             throw new MessageNotPublishedException("Failed to send message", e);
         }
     }
