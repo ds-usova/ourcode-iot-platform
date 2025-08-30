@@ -3,6 +3,7 @@ plugins {
     id "org.springframework.boot" version "$springBootVersion"
     id "io.spring.dependency-management" version "$springDependencyManagementVersion"
     id "com.github.davidmc24.gradle.plugin.avro" version "$avroPluginVersion"
+    id "jacoco"
 }
 
 group = "org.ourcode"
@@ -51,7 +52,7 @@ dependencies {
     // Test
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.springframework.boot:spring-boot-testcontainers"
-    testImplementation "org.springframework.kafka:spring-kafka-test"
+
     testImplementation "org.testcontainers:cassandra"
     testImplementation "org.testcontainers:junit-jupiter"
     testImplementation "org.testcontainers:kafka"
@@ -71,3 +72,33 @@ avro {
     createSetters = true
     fieldVisibility = 'PRIVATE'
 }
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = false
+        csv.required = false
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification

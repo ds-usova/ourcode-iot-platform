@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.ourcode.eventcollector.cassandra.DeviceEventEntity;
 import org.ourcode.eventcollector.cassandra.DeviceEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import java.time.Duration;
@@ -17,9 +19,13 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 @Slf4j
 public class EventCollectionTest extends AbstractIntegrationTest {
+
+    @DynamicPropertySource
+    static void overrideProperties(DynamicPropertyRegistry registry) {
+        AbstractIntegrationTest.setProperties(registry);
+    }
 
     @Autowired
     protected DeviceEventRepository deviceEventRepository;

@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.cassandra.CassandraContainer;
+import org.testcontainers.cassandra.wait.CassandraQueryWaitStrategy;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -20,8 +20,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
-
-import java.time.Duration;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -33,7 +31,7 @@ public abstract class AbstractIntegrationTest {
     private static final Network network = Network.newNetwork();
 
     @Container
-    private static final KafkaContainer kafka = new KafkaContainer(
+    static final KafkaContainer kafka = new KafkaContainer(
             DockerImageName.parse("apache/kafka:3.9.1")
                     .asCompatibleSubstituteFor("confluentinc/cp-kafka")
     )
@@ -43,7 +41,7 @@ public abstract class AbstractIntegrationTest {
             .waitingFor(Wait.forListeningPort());
 
     @Container
-    private static final GenericContainer<?> schemaRegistry = new GenericContainer<>(DockerImageName.parse("bitnami/schema-registry:8.0"))
+    static final GenericContainer<?> schemaRegistry = new GenericContainer<>(DockerImageName.parse("bitnami/schema-registry:8.0"))
             .withNetwork(network)
             .withNetworkAliases("schema-registry")
             .withExposedPorts(8081)
@@ -56,14 +54,13 @@ public abstract class AbstractIntegrationTest {
             .waitingFor(Wait.forHttp("/subjects").forStatusCode(200));
 
     @Container
-    private static final CassandraContainer cassandra = new CassandraContainer("cassandra:5.0")
+    static final CassandraContainer cassandra = new CassandraContainer("cassandra:5.0")
             .withNetwork(network)
             .withNetworkAliases("cassandra")
             .withExposedPorts(9042)
             .withEnv("CASSANDRA_CLUSTER_NAME", "cluster")
             .withInitScript("init-cassandra.cql")
-            .waitingFor(Wait.forLogMessage(".*Starting listening for CQL clients.*\\n", 1)
-                    .withStartupTimeout(Duration.ofMinutes(5)));
+            .waitingFor(new CassandraQueryWaitStrategy());
 
     @Autowired
     private KafkaTopics kafkaTopics;
@@ -71,7 +68,6 @@ public abstract class AbstractIntegrationTest {
     protected TestConsumers testConsumers;
     protected TestProducers testProducers;
 
-    @DynamicPropertySource
     protected static void setProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
         registry.add("spring.kafka.consumer.properties.schema.registry.url", AbstractIntegrationTest::schemaRegistryUrl);

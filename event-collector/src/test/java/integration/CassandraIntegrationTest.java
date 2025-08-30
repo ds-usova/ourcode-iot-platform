@@ -7,10 +7,17 @@ import org.ourcode.eventcollector.cassandra.CassandraDeviceEventGateway;
 import org.ourcode.eventcollector.cassandra.DeviceEventEntity;
 import org.ourcode.eventcollector.cassandra.DeviceEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class CassandraIntegrationTest extends AbstractIntegrationTest {
+
+    @DynamicPropertySource
+    static void overrideProperties(DynamicPropertyRegistry registry) {
+        AbstractIntegrationTest.setProperties(registry);
+    }
 
     @Autowired
     private CassandraDeviceEventGateway deviceEventGateway;
