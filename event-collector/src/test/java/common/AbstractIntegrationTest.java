@@ -9,6 +9,7 @@ import org.ourcode.eventcollector.EventCollectorApplication;
 import org.ourcode.eventcollector.kafka.configuration.KafkaTopics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.cassandra.CassandraContainer;
@@ -24,6 +25,7 @@ import org.testcontainers.utility.DockerImageName;
 @Slf4j
 @ActiveProfiles("test")
 @SuppressWarnings("resource")
+@Import(TestConfiguration.class)
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(classes = EventCollectorApplication.class)
 public abstract class AbstractIntegrationTest {
@@ -65,6 +67,9 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     private KafkaTopics kafkaTopics;
 
+    @Autowired
+    protected DatabaseManager databaseManager;
+
     protected TestConsumers testConsumers;
     protected TestProducers testProducers;
 
@@ -95,6 +100,7 @@ public abstract class AbstractIntegrationTest {
     @AfterEach
     void tearDown() {
         testConsumers.close();
+        databaseManager.cleanUp();
     }
 
     private static String schemaRegistryUrl() {
