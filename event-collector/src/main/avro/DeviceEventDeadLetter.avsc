@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "DeviceEventDeadLetter",
+  "namespace": "com.ourcode.avro",
+  "fields": [
+    { "name": "eventId", "type": ["null", "string"], "default": null },
+    { "name": "deviceId", "type": ["null", "string"], "default": null },
+    { "name": "timestamp", "type": ["null", "long"], "default": null },
+    { "name": "type", "type": ["null", "string"], "default": null },
+    { "name": "payload", "type": ["null", "string"], "default": null },
+    { "name": "errorMessage", "type": "string" },
+    { "name": "rawEvent", "type": ["null", "string"], "default": null }
+  ]
+}
