@@ -5,11 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.ourcode.eventcollector.api.exception.MessageNotPublishedException;
 import org.ourcode.eventcollector.api.gateway.DevicePublisher;
+import org.ourcode.eventcollector.api.gateway.DevicePublisherListener;
 import org.ourcode.eventcollector.api.model.DeviceEvent;
 import org.ourcode.eventcollector.kafka.configuration.KafkaTopics;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Slf4j
 @Component
@@ -18,12 +21,16 @@ public class KafkaDevicePublisher implements DevicePublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final String topic;
 
+    private final List<DevicePublisherListener> listeners;
+
     public KafkaDevicePublisher(
             KafkaTemplate<String, Object> kafkaTemplate,
-            KafkaTopics kafkaTopics
+            KafkaTopics kafkaTopics,
+            List<DevicePublisherListener> listeners
     ) {
         this.kafkaTemplate = kafkaTemplate;
         this.topic = kafkaTopics.devices();
+        this.listeners = listeners;
     }
 
     @Override
@@ -32,15 +39,17 @@ public class KafkaDevicePublisher implements DevicePublisher {
 
         try {
             String key = deviceEvent.deviceId();
-            Device message = toAvroDevice(deviceEvent);
+            Device value = toAvroDevice(deviceEvent);
 
-            ProducerRecord<String, Object> record = createProducerRecord(topic, key, message);
-            SendResult<String, Object> result = kafkaTemplate.send(record).get();
+            ProducerRecord<String, Object> record = createProducerRecord(topic, key, value);
 
-            log.debug("Message sent successfully to topic: {}, partition: {}, offset: {}",
-                    result.getRecordMetadata().topic(),
-                    result.getRecordMetadata().partition(),
-                    result.getRecordMetadata().offset());
+            kafkaTemplate.send(record)
+                    .whenComplete((_, cause) -> {
+                        if (cause != null) {
+                            handleError(key, deviceEvent, cause);
+                        }
+                    })
+                    .thenAccept(sendResult -> handleSuccess(sendResult, key));
 
         } catch (Exception e) {
             log.error("Failed to send message to topic: {}, key: {}", topic, deviceEvent.deviceId(), e);
@@ -56,6 +65,19 @@ public class KafkaDevicePublisher implements DevicePublisher {
         return Device.newBuilder()
                 .setDeviceId(device.deviceId())
                 .build();
+    }
+
+    private void handleError(String key, DeviceEvent deviceEvent, Throwable cause) {
+        log.error("Failed to send message to topic: {}, key: {}", topic, key, cause);
+        listeners.forEach(listener -> listener.onError(deviceEvent, cause));
+    }
+
+    private void handleSuccess(SendResult<String, Object> sendResult, String key) {
+        log.debug("Device with id {} sent successfully to topic: {}, partition: {}, offset: {}",
+                key,
+                sendResult.getRecordMetadata().topic(),
+                sendResult.getRecordMetadata().partition(),
+                sendResult.getRecordMetadata().offset());
     }
 
 }
