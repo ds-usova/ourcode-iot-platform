@@ -3,25 +3,10 @@
   "name": "DeviceEvent",
   "namespace": "com.ourcode.avro",
   "fields": [
-    {
-      "name": "eventId",
-      "type": "string"
-    },
-    {
-      "name": "deviceId",
-      "type": "string"
-    },
-    {
-      "name": "timestamp",
-      "type": "long"
-    },
-    {
-      "name": "type",
-      "type": "string"
-    },
-    {
-      "name": "payload",
-      "type": "string"
-    }
+    { "name": "eventId", "type": "string" },
+    { "name": "deviceId", "type": "string" },
+    { "name": "timestamp", "type": "long" },
+    { "name": "type", "type": "string" },
+    { "name": "payload", "type": "string" }
   ]
 }
