@@ -30,7 +30,8 @@ event-collector/
 │   └── src/main/
 │       ├── avro/                    # Avro schemas
 │       ├── java/
-│       │   ├── api/                 # Service API (doens't depend on any other layers)
+│       │   ├── api/                 # Service API (doesn't depend on any other layers)
+│       │   │   ├── exception/
 │       │   │   ├── gateway/         # Gateway interfaces (data providers/consumers)
 │       │   │   ├── model/           # Model classes
 │       │   │   └── service/         # Business logic interfaces
@@ -49,7 +50,32 @@ event-collector/
 
 - Git
 - Docker
+- Install Kafka plugin for your IDE (e.g., IntelliJ IDEA)
+- (Optional) Switch to Linux terminal to run make commands if you're on Windows
 
 ### Starting the Platform
 
-TODO
+1. Open the infrastructure directory:
+```bash
+cd ../architecture/infrastructure
+```
+2. Start the required services:
+```bash
+make start-env-event-collector
+```
+
+3. Create schemas in Schema Registry with Kafka plugin (see src/main/avro).
+4. Start the Event Collector service.
+5. Make sure all services are healthy. 
+
+You can also send a test event with Kafka 
+plugin to verify that the service is working correctly. If there is a device 
+published to device-ids topic, the service is working correctly.
+
+### Plans
+
+- Automate schema creation
+- Replace in-memory cache, as it is not suitable for production use
+- Potentially use an outbox table to ensure devices are published
+- Use env variables for configuration in application.yaml instead of hardcoding values
+- Configure logging and monitoring

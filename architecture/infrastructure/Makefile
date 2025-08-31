@@ -12,3 +12,7 @@ reset:
 	@echo "Resetting services..."
 	docker compose down -v
 	docker compose up -d
+
+start-env-event-collector:
+	@echo "Starting environment event collector..."
+	docker compose up -d kafka kafka-init schema-registry cassandra cassandra-load-keyspace
