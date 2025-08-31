@@ -28,6 +28,9 @@ public class KafkaProducerConfiguration {
     @Value("${spring.kafka.producer.retry-backoff-ms}")
     private String retryBackoffMs;
 
+    @Value("${spring.kafka.producer.acks}")
+    private String acks;
+
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> props = new HashMap<>();
@@ -37,6 +40,7 @@ public class KafkaProducerConfiguration {
         props.put("schema.registry.url", schemaRegistryUrl);
         props.put(ProducerConfig.RETRIES_CONFIG, retries);
         props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, retryBackoffMs);
+        props.put(ProducerConfig.ACKS_CONFIG, acks);
         return new DefaultKafkaProducerFactory<>(props);
     }
 

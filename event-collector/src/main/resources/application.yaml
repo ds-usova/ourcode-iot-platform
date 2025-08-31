@@ -26,6 +26,7 @@ spring:
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       retries: 5
       retry-backoff-ms: 1000
+      acks: all
       properties:
         schema.registry.url: http://localhost:8081
 
