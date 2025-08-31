@@ -2,6 +2,7 @@ package system_test;
 
 import com.ourcode.avro.Device;
 import com.ourcode.avro.DeviceEvent;
+import com.ourcode.avro.DeviceEventDeadLetter;
 import common.AbstractIntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +15,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import java.time.Duration;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -78,6 +80,37 @@ public class EventCollectionTest extends AbstractIntegrationTest {
         });
     }
 
+    /**
+     * Given:
+     * - Invalid Avro message is sent to the Kafka "events" topic
+     * <p>
+     * When:
+     * - The message is consumed
+     * <p>
+     * Then:
+     * - The message is sent to the DLT topic with an error message
+     * - No event is saved in Cassandra
+     */
+    @Test
+    @DisplayName("Invalid Avro: event is not collected if schema is invalid")
+    void eventIsNotCollectedOnInvalidAvro() {
+        // Given: payload that does not conform to the Avro schema
+        byte[] invalidPayload = "poison-pills".getBytes();
+
+        // When: Send invalid Avro bytes to the events topic
+        testProducers.sendRawEventBytes("invalid-key", invalidPayload);
+
+        // Then: The event is sent to the DLT
+        Awaitility.await().atMost(Duration.ofSeconds(5)).pollInterval(Duration.ofSeconds(1)).untilAsserted(() -> {
+            Map<String, DeviceEventDeadLetter> devices = testConsumers.readDlt();
+            assertThat(devices).withFailMessage("Expected exactly one event in DLT").hasSize(1);
+            assertThat(devices.containsKey("invalid-key")).isTrue();
+            assertThat(devices.get("invalid-key").getErrorMessage()).isEqualTo("failed to deserialize");
+            assertThat(devices.get("invalid-key").getRawEvent()).isEqualTo(Base64.getEncoder().encodeToString(invalidPayload));
+
+            List<DeviceEventEntity> savedEvents = deviceEventRepository.findAll();
+            assertThat(savedEvents).isEmpty();
+        });
+    }
+
 }
-
-

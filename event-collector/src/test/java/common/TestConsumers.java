@@ -1,6 +1,7 @@
 package common;
 
 import com.ourcode.avro.Device;
+import com.ourcode.avro.DeviceEventDeadLetter;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -22,6 +23,7 @@ public class TestConsumers {
     private final String schemaRegistryUrl;
 
     private KafkaConsumer<String, Device> deviceKafkaConsumer;
+    private KafkaConsumer<String, DeviceEventDeadLetter> eventDltKafkaConsumer;
 
     public TestConsumers(KafkaTopics kafkaTopics, String bootstrapServers, String schemaRegistryUrl) {
         this.kafkaTopics = kafkaTopics;
@@ -30,24 +32,38 @@ public class TestConsumers {
     }
 
     public Map<String, Device> readDevices() {
-        Map<String, Device> devices = new HashMap<>();
-        deviceKafkaConsumer.poll(Duration.ofMillis(1000))
-                .records(kafkaTopics.devices())
-                .forEach(it -> devices.put(it.key(), it.value()));
-        return devices;
+        return read(deviceKafkaConsumer, kafkaTopics.devices());
+    }
+
+    public Map<String, DeviceEventDeadLetter> readDlt() {
+        return read(eventDltKafkaConsumer, dltTopic());
     }
 
     void init() {
-        this.deviceKafkaConsumer = createDeviceConsumer();
+        this.deviceKafkaConsumer = createConsumer(kafkaTopics.devices());
+        this.eventDltKafkaConsumer = createConsumer(dltTopic());
     }
 
     void close() {
         if (deviceKafkaConsumer != null) {
             deviceKafkaConsumer.close();
         }
+
+        if (eventDltKafkaConsumer != null) {
+            eventDltKafkaConsumer.close();
+        }
     }
 
-    private KafkaConsumer<String, Device> createDeviceConsumer() {
+    private <T> KafkaConsumer<String, T> createConsumer(String topic) {
+        KafkaConsumer<String, T> consumer = new KafkaConsumer<>(createProperties());
+        consumer.subscribe(Collections.singletonList(topic));
+
+        log.info("Kafka consumer subscribed to topic: {}", consumer.subscription());
+
+        return consumer;
+    }
+
+    private Properties createProperties() {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group");
@@ -57,12 +73,19 @@ public class TestConsumers {
         props.put("schema.registry.url", schemaRegistryUrl);
         props.put("specific.avro.reader", "true");
 
-        KafkaConsumer<String, Device> deviceKafkaConsumer = new KafkaConsumer<>(props);
-        deviceKafkaConsumer.subscribe(Collections.singletonList(kafkaTopics.devices()));
+        return props;
+    }
 
-        log.info("Kafka consumer subscribed to topic: {}", kafkaTopics.devices());
+    private String dltTopic() {
+        return kafkaTopics.events() + "-dlt";
+    }
 
-        return deviceKafkaConsumer;
+    private <T> Map<String, T> read(KafkaConsumer<String, T> consumer, String topic) {
+        Map<String, T> records = new HashMap<>();
+        consumer.poll(Duration.ofMillis(1000))
+                .records(topic)
+                .forEach(it -> records.put(it.key(), it.value()));
+        return records;
     }
 
 }
