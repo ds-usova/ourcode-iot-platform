@@ -9,7 +9,9 @@ spring:
       enable-auto-commit: false
       key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      max-poll-records: 100
+      backoff-interval: 1000
+      backoff-max-attempts: 1
+      concurrency: 1
       properties:
         schema.registry.url: http://localhost:8081
         specific.avro.reader: true
@@ -30,6 +32,10 @@ spring:
     port: 9042
     schema-action: none
     local-datacenter: datacenter1
+    request:
+      timeout: 1s
+      init-query-timeout: 5s
+      connect-timeout: 5s
 
 logging:
   level:

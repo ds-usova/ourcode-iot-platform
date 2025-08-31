@@ -1,6 +1,13 @@
 package common;
 
+import common.containers.CassandraContainer;
+import common.containers.KafkaContainer;
+import common.containers.SchemaRegistryContainer;
+import common.containers.ToxiproxyContainer;
+import eu.rekawek.toxiproxy.Proxy;
+import eu.rekawek.toxiproxy.ToxiproxyClient;
 import jakarta.annotation.PostConstruct;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,59 +17,20 @@ import org.ourcode.eventcollector.kafka.configuration.KafkaTopics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.testcontainers.cassandra.CassandraContainer;
-import org.testcontainers.cassandra.wait.CassandraQueryWaitStrategy;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.Network;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.kafka.KafkaContainer;
-import org.testcontainers.utility.DockerImageName;
 
 @Slf4j
 @ActiveProfiles("test")
-@SuppressWarnings("resource")
 @Import(TestConfiguration.class)
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(classes = EventCollectorApplication.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractIntegrationTest {
 
-    private static final Network network = Network.newNetwork();
-
-    @Container
-    static final KafkaContainer kafka = new KafkaContainer(
-            DockerImageName.parse("apache/kafka:3.9.1")
-                    .asCompatibleSubstituteFor("confluentinc/cp-kafka")
-    )
-            .withNetwork(network)
-            .withNetworkAliases("kafka")
-            .withListener("kafka:29092")
-            .waitingFor(Wait.forListeningPort());
-
-    @Container
-    static final GenericContainer<?> schemaRegistry = new GenericContainer<>(DockerImageName.parse("bitnami/schema-registry:8.0"))
-            .withNetwork(network)
-            .withNetworkAliases("schema-registry")
-            .withExposedPorts(8081)
-            .withEnv("SCHEMA_REGISTRY_HOST_NAME", "schema-registry")
-            .withEnv("SCHEMA_REGISTRY_LISTENERS", "http://0.0.0.0:8081")
-            .withEnv("SCHEMA_REGISTRY_KAFKA_BROKERS", "PLAINTEXT://kafka:29092")
-            .withEnv("SCHEMA_REGISTRY_AVRO_COMPATIBILY_LEVEL", "BACKWARD")
-            .withEnv("SCHEMA_REGISTRY_DEBUG", "true")
-            .dependsOn(kafka)
-            .waitingFor(Wait.forHttp("/subjects").forStatusCode(200));
-
-    @Container
-    static final CassandraContainer cassandra = new CassandraContainer("cassandra:5.0")
-            .withNetwork(network)
-            .withNetworkAliases("cassandra")
-            .withExposedPorts(9042)
-            .withEnv("CASSANDRA_CLUSTER_NAME", "cluster")
-            .withInitScript("init-cassandra.cql")
-            .waitingFor(new CassandraQueryWaitStrategy());
+    protected static Proxy cassandraProxy;
 
     @Autowired
     private KafkaTopics kafkaTopics;
@@ -73,18 +41,35 @@ public abstract class AbstractIntegrationTest {
     protected TestConsumers testConsumers;
     protected TestProducers testProducers;
 
+    static {
+        log.info("Kafka is running: {}", KafkaContainer.CONTAINER.isRunning());
+        log.info("Schema Registry is running: {}", SchemaRegistryContainer.CONTAINER.isRunning());
+        log.info("Cassandra is running: {}", CassandraContainer.CONTAINER.isRunning());
+        log.info("Toxi proxy is running: {}", ToxiproxyContainer.CONTAINER.isRunning());
+    }
+
     protected static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        setProperties(registry, false);
+    }
+
+    @SneakyThrows
+    protected static void setProperties(DynamicPropertyRegistry registry, boolean toxic) {
+        registry.add("spring.kafka.bootstrap-servers", KafkaContainer.CONTAINER::getBootstrapServers);
         registry.add("spring.kafka.consumer.properties.schema.registry.url", AbstractIntegrationTest::schemaRegistryUrl);
         registry.add("spring.kafka.producer.properties.schema.registry.url", AbstractIntegrationTest::schemaRegistryUrl);
-        registry.add("spring.cassandra.port", () -> cassandra.getMappedPort(9042));
-        registry.add("spring.cassandra.contact-points", cassandra::getHost);
+
+        if (toxic) {
+            proxyCassandra(registry);
+        } else {
+            registry.add("spring.cassandra.port", () -> CassandraContainer.CONTAINER.getMappedPort(9042));
+            registry.add("spring.cassandra.contact-points", CassandraContainer.CONTAINER::getHost);
+        }
     }
 
     @PostConstruct
     void init() {
-        testConsumers = new TestConsumers(kafkaTopics, kafka.getBootstrapServers(), schemaRegistryUrl());
-        testProducers = new TestProducers(kafkaTopics, kafka.getBootstrapServers(), schemaRegistryUrl());
+        testConsumers = new TestConsumers(kafkaTopics, KafkaContainer.CONTAINER.getBootstrapServers(), schemaRegistryUrl());
+        testProducers = new TestProducers(kafkaTopics, KafkaContainer.CONTAINER.getBootstrapServers(), schemaRegistryUrl());
     }
 
     @BeforeAll
@@ -103,9 +88,18 @@ public abstract class AbstractIntegrationTest {
         databaseManager.cleanUp();
     }
 
+    @SneakyThrows
+    private static void proxyCassandra(DynamicPropertyRegistry registry) {
+        ToxiproxyClient toxiproxyClient = new ToxiproxyClient(ToxiproxyContainer.CONTAINER.getHost(), ToxiproxyContainer.CONTAINER.getControlPort());
+
+        cassandraProxy = toxiproxyClient.createProxy("cassandra-proxy", "0.0.0.0:8666", "cassandra:9042");
+
+        registry.add("spring.cassandra.port", () -> ToxiproxyContainer.CONTAINER.getMappedPort(8666));
+        registry.add("spring.cassandra.contact-points", ToxiproxyContainer.CONTAINER::getHost);
+    }
+
     private static String schemaRegistryUrl() {
-        return String.format("http://%s:%d", schemaRegistry.getHost(), schemaRegistry.getMappedPort(8081));
+        return String.format("http://%s:%d", SchemaRegistryContainer.CONTAINER.getHost(), SchemaRegistryContainer.CONTAINER.getMappedPort(8081));
     }
 
 }
-

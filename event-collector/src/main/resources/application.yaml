@@ -12,7 +12,9 @@ spring:
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-      max-poll-records: 100
+      backoff-interval: 1000
+      backoff-max-attempts: 5
+      concurrency: 1
       properties:
         schema.registry.url: http://localhost:8081
         specific.avro.reader: true

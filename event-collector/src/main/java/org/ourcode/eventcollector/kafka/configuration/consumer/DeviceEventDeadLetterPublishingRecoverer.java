@@ -1,4 +1,4 @@
-package org.ourcode.eventcollector.kafka.configuration;
+package org.ourcode.eventcollector.kafka.configuration.consumer;
 
 import com.ourcode.avro.DeviceEvent;
 import com.ourcode.avro.DeviceEventDeadLetter;

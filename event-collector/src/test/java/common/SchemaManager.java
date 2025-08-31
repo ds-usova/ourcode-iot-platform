@@ -2,6 +2,7 @@ package common;
 
 import com.ourcode.avro.Device;
 import com.ourcode.avro.DeviceEvent;
+import com.ourcode.avro.DeviceEventDeadLetter;
 import io.confluent.kafka.schemaregistry.avro.AvroSchema;
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
@@ -23,6 +24,7 @@ public class SchemaManager {
     public void registerSchemas() {
         registerSchema(DeviceEvent.getClassSchema(), "events");
         registerSchema(Device.getClassSchema(), "devices");
+        registerSchema(DeviceEventDeadLetter.getClassSchema(), "events-dlt");
     }
 
     private void registerSchema(Schema schema, String topic) {

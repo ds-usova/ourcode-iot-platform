@@ -1,4 +1,4 @@
-package org.ourcode.eventcollector.kafka.configuration;
+package org.ourcode.eventcollector.kafka.configuration.consumer;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -38,6 +38,15 @@ public class KafkaConsumerConfiguration {
     @Value("${spring.kafka.consumer.properties.specific.avro.reader}")
     private boolean specificAvroReader;
 
+    @Value("${spring.kafka.consumer.backoff-interval}")
+    private long backoffInterval;
+
+    @Value("${spring.kafka.consumer.backoff-max-attempts}")
+    private long backoffMaxAttempts;
+
+    @Value("${spring.kafka.consumer.concurrency}")
+    private int listenerConcurrency;
+
     @Bean
     public ConsumerFactory<String, DeviceEvent> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
@@ -63,14 +72,14 @@ public class KafkaConsumerConfiguration {
 
     @Bean
     public DefaultErrorHandler errorHandler(DeadLetterPublishingRecoverer deadLetterPublishingRecoverer) {
-        return new DefaultErrorHandler(deadLetterPublishingRecoverer, new FixedBackOff(1000L, 5));
+        return new DefaultErrorHandler(deadLetterPublishingRecoverer, new FixedBackOff(backoffInterval, backoffMaxAttempts));
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, DeviceEvent> kafkaListenerContainerFactory(DefaultErrorHandler errorHandler) {
         ConcurrentKafkaListenerContainerFactory<String, DeviceEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-        factory.setConcurrency(1);
+        factory.setConcurrency(listenerConcurrency);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         factory.setCommonErrorHandler(errorHandler);
         return factory;
