@@ -82,7 +82,7 @@ public class TestConsumers {
 
     private <T> Map<String, T> read(KafkaConsumer<String, T> consumer, String topic) {
         Map<String, T> records = new HashMap<>();
-        consumer.poll(Duration.ofMillis(1000))
+        consumer.poll(Duration.ofMillis(500))
                 .records(topic)
                 .forEach(it -> records.put(it.key(), it.value()));
         return records;
