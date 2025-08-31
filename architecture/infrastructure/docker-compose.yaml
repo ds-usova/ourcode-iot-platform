@@ -85,7 +85,8 @@ services:
     image: cassandra:5.0
     container_name: cassandra-load-keyspace
     depends_on:
-      - cassandra
+      cassandra:
+        condition: service_healthy
     networks:
       - backend
     volumes:
@@ -274,9 +275,9 @@ services:
       retries: 3
       start_period: 60s
 
-  postgres_exporter:
+  postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
-    container_name: postgres_exporter
+    container_name: postgres-exporter
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB_NAME}?sslmode=disable"
     ports:
@@ -295,7 +296,7 @@ services:
 
   kafka-exporter:
     image: danielqsj/kafka-exporter:latest
-    container_name: kafka_exporter
+    container_name: kafka-exporter
     command:
       - "--kafka.server=kafka:9092"
     ports:
@@ -310,6 +311,33 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  # Application
+  event-collector:
+    image: event-collector:latest
+    container_name: event-collector
+    ports:
+      - "8090:8090"
+    build:
+      context: ./../../event-collector
+    networks:
+      - backend
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      schema-registry:
+        condition: service_started
+      cassandra:
+        condition: service_healthy
+      cassandra-load-keyspace:
+        condition: service_completed_successfully
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
+      - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_PORT=9042
 
 volumes:
   postgres_data:

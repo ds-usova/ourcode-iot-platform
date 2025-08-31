@@ -1,9 +1,14 @@
+server:
+  port: 8090
+
 spring:
+  application:
+    name: event-collector
   threads:
     virtual:
       enabled: true
   kafka:
-    bootstrap-servers: localhost:29092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     admin:
       auto-create: false
     consumer:
@@ -16,7 +21,7 @@ spring:
       backoff-max-attempts: 5
       concurrency: 1
       properties:
-        schema.registry.url: http://localhost:8081
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
         specific.avro.reader: true
         max.poll.interval.ms: 300000
         session.timeout.ms: 10000
@@ -28,12 +33,12 @@ spring:
       retry-backoff-ms: 1000
       acks: all
       properties:
-        schema.registry.url: http://localhost:8081
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
 
   cassandra:
     keyspace-name: iot_schema
-    contact-points: localhost
-    port: 9042
+    contact-points: ${CASSANDRA_CONTACT_POINTS:localhost}
+    port: ${CASSANDRA_PORT:9042}
     schema-action: none
     local-datacenter: datacenter1
 
@@ -42,3 +47,16 @@ app:
     topics:
       events: events
       devices: device-ids
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    prometheus:
+      enabled: true
