@@ -11,7 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class InMemoryCacheDeviceRegistry implements DeviceRegistry {
 
-    private final ConcurrentHashMap.KeySetView<String, Boolean> deviceIds = ConcurrentHashMap.newKeySet(100);
+    private static final int DEFAULT_INITIAL_CAPACITY = 100;
+    private final ConcurrentHashMap.KeySetView<String, Boolean> deviceIds = ConcurrentHashMap.newKeySet(DEFAULT_INITIAL_CAPACITY);
 
     @Override
     public boolean registerIfNotExists(DeviceEvent deviceEvent) {
