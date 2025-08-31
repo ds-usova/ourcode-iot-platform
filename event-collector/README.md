@@ -79,3 +79,5 @@ published to device-ids topic, the service is working correctly.
 - Potentially use an outbox table to ensure devices are published
 - Use env variables for configuration in application.yaml instead of hardcoding values
 - Configure logging and monitoring
+- Add tests when kafka has high latency
+- Add CI/CD pipeline
