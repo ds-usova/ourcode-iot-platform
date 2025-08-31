@@ -76,6 +76,8 @@ You can also send a test event with Kafka
 plugin to verify that the service is working correctly. If there is a device 
 published to device-ids topic, the service is working correctly.
 
+You can also use 'make start-event-collector' to build and run the service in one command.
+
 ### Plans
 
 - Automate schema creation
