@@ -18,6 +18,10 @@ The service consists of the following components:
 
 ![Diagram](architecture/diagrams/image/container-diagram.png)
 
+## Event Processing Flow
+
+![Diagram](architecture/diagrams/image/consume-event-flow.png)
+
 ## Project Structure
 
 ```plaintext
