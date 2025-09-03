@@ -59,18 +59,16 @@ event-collector/
 
 ### Starting the Platform
 
-1. Open the infrastructure directory:
+1. Navigate to the root directory of the project and run the make command to start the required environment:
+
 ```bash
-cd ../architecture/infrastructure
-```
-2. Start the required services:
-```bash
+cd ..
 make start-env-event-collector
 ```
 
-3. Create schemas in Schema Registry with Kafka plugin (see src/main/avro).
-4. Start the Event Collector service.
-5. Make sure all services are healthy. 
+2. Create schemas in Schema Registry with Kafka plugin (see src/main/avro).
+3. Start the Event Collector service.
+4. Make sure all services are healthy. 
 
 You can also send a test event with Kafka 
 plugin to verify that the service is working correctly. If there is a device 
