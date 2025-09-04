@@ -1,0 +1,47 @@
+@startuml "Device Event Processing Flow"
+
+' Define styles
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+actor "Kafka Broker" as KafkaBroker
+participant "EventsCollectorService" as ECS
+participant "AvroDeserializer" as AVRO
+database "Cassandra" as DB
+database "Cache" as CACHE
+participant "KafkaProducer" as KP
+
+KafkaBroker -> ECS: send event (DeviceEvent)
+activate ECS
+
+ECS -> AVRO: deserialize Avro
+activate AVRO
+AVRO --> ECS: DeviceEvent DTO
+deactivate AVRO
+
+    ECS -> DB: save event by device id
+    activate DB
+    DB --> ECS:
+    deactivate DB
+
+    ECS -> CACHE: cache device by device id
+    activate CACHE
+    CACHE --> ECS: stores device id, returns true if new
+    deactivate CACHE
+
+alt Device is new
+    ECS -> KP: send device to "device-id-topic"
+    activate KP
+    KP --> KafkaBroker: produce device (Device)
+    deactivate KP
+end
+
+deactivate ECS
+
+note right of ECS
+  Device events are processed
+  and new devices are published
+  to a separate topic
+end note
+
+@enduml

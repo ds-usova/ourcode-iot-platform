@@ -1,0 +1,52 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:29092
+    admin:
+      auto-create: false
+    consumer:
+      auto-offset-reset: latest
+      group-id: event-collector-group
+      enable-auto-commit: false
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      backoff-interval: 1000
+      backoff-max-attempts: 1
+      concurrency: 1
+      properties:
+        schema.registry.url: http://localhost:8081
+        specific.avro.reader: true
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
+        heartbeat.interval.ms: 3000
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: io.confluent.kafka.serializers.KafkaAvroDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: http://localhost:8081
+
+  cassandra:
+    keyspace-name: iot_schema
+    contact-points: localhost
+    port: 9042
+    schema-action: none
+    local-datacenter: datacenter1
+    request:
+      timeout: 1s
+      init-query-timeout: 5s
+      connect-timeout: 5s
+
+logging:
+  level:
+    root: WARN
+    org.springframework: WARN
+    org.apache.kafka: WARN
+    org.ourcode: DEBUG
+    common: DEBUG
+
+app:
+  kafka:
+    topics:
+      events: events
+      devices: device-ids

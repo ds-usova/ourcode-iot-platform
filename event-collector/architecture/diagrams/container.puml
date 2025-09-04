@@ -1,0 +1,33 @@
+@startuml Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title "Container Diagram"
+
+' Styles
+UpdateElementStyle("container", $borderColor="#444444")
+UpdateElementStyle("external_container", $borderColor="#444444")
+
+System_Boundary(system, "Event collector") {
+
+    ' Containers
+    Container(event_collector, "Event Collector", "Spring Boot", "Collects events from devices")
+    ContainerDb(event_db, "Events Database", "Cassandra Cluster")
+    ContainerQueue(events_topic, "Events topic", "Apache Kafka")
+    ContainerQueue(devices_topic, "Devices topic", "Apache Kafka")
+    ContainerQueue(dlt_topic, "DLT Event topic", "Apache Kafka")
+
+
+    ' Relations
+    Rel_L(event_collector, events_topic, "Reads events")
+    Rel_D(event_collector, dlt_topic, "Writes events that could not be processed")
+    Rel_D(event_collector, event_db, "Stores events")
+    Rel_R(event_collector, devices_topic, "Writes unique device IDs")
+}
+
+' External containers
+Container_Ext(iot_devices, "IoT Devices", "Embedded devices")
+Container_Ext(device_collector, "Device Collector", "Spring Boot", "Processes device IDs")
+
+Rel(iot_devices, events_topic, "Sends telemetry")
+Rel_R(device_collector, devices_topic, "Reads devices")
+@enduml
