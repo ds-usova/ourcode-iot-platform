@@ -1,0 +1,35 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:29092
+    admin:
+      auto-create: false
+    consumer:
+      auto-offset-reset: latest
+      group-id: event-collector-group
+      enable-auto-commit: false
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      backoff-interval: 1000
+      backoff-max-attempts: 1
+      concurrency: 1
+      properties:
+        schema.registry.url: http://localhost:8081
+        specific.avro.reader: true
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
+        heartbeat.interval.ms: 3000
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: io.confluent.kafka.serializers.KafkaAvroDeserializer
+
+logging:
+  level:
+    root: WARN
+    org.springframework: WARN
+    org.apache.kafka: WARN
+    org.ourcode: DEBUG
+    common: DEBUG
+
+app:
+  kafka:
+    topics:
+      devices: device-ids

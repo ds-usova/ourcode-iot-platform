@@ -1,0 +1,13 @@
+@startuml Context
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Device Collector - Context Diagram
+
+' Internal
+System(device_collector, "Device Collector", "TODO")
+
+' External systems
+
+' Relations
+
+@enduml

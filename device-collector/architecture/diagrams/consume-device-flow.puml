@@ -1,0 +1,10 @@
+@startuml "Device Event Processing Flow"
+
+' Define styles
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+actor "Kafka Broker" as KafkaBroker
+participant "AvroDeserializer" as AVRO
+
+@enduml

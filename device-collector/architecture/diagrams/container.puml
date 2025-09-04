@@ -1,0 +1,19 @@
+@startuml Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title "Container Diagram"
+
+' Styles
+UpdateElementStyle("container", $borderColor="#444444")
+UpdateElementStyle("external_container", $borderColor="#444444")
+
+System_Boundary(system, "Device collector") {
+
+    ' Containers
+    Container(device_collector, "Device Collector", "Spring Boot", "TODO")
+
+}
+
+' External containers
+
+@enduml

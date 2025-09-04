@@ -1,0 +1,46 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: device-collector
+  threads:
+    virtual:
+      enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    admin:
+      auto-create: false
+    consumer:
+      auto-offset-reset: latest
+      group-id: event-collector-group
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      backoff-interval: 1000
+      backoff-max-attempts: 5
+      concurrency: 1
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+        specific.avro.reader: true
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
+        heartbeat.interval.ms: 3000
+
+app:
+  kafka:
+    topics:
+      devices: device-ids
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    prometheus:
+      enabled: true
