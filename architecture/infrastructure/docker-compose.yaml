@@ -1,12 +1,43 @@
+x-postgres-env: &postgres-env
+  POSTGRES_DB: ${POSTGRES_DB_NAME}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+
+x-postgres-base: &postgres-base
+  image: postgres:17.5
+  healthcheck:
+    test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NAME}" ]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
+  deploy:
+    resources:
+      limits:
+        memory: 256M
+  networks:
+    - backend
+
+x-postgres-exporter: &postgres-exporter
+  image: prometheuscommunity/postgres-exporter:latest
+  networks:
+    - backend
+  healthcheck:
+    test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9187/metrics" ]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+
 services:
   postgres:
-    image: postgres:17.5
+    <<: *postgres-base
     container_name: postgres_db
+    ports:
+      - "5432:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB_NAME}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+      <<: *postgres-env
       # Keycloack database configuration
       KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
@@ -15,23 +46,31 @@ services:
       CAMUNDA_DB_USER: ${CAMUNDA_DB_USER}
       CAMUNDA_DB_PASSWORD: ${CAMUNDA_DB_PASSWORD}
       CAMUNDA_DB_SCHEMA: ${CAMUNDA_DB_SCHEMA}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init-postgres.sh:/docker-entrypoint-initdb.d/init-db.sh
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NAME}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    networks:
-      - backend
+
+  postgres_shard_0:
+    <<: *postgres-base
+    container_name: postgres_shard_0
+    ports:
+      - "5433:5432"
+    environment:
+      <<: *postgres-env
+    volumes:
+      - postgres_shard_0_data:/var/lib/postgresql/data
+      - ./db/init-postgres-shards.sh:/docker-entrypoint-initdb.d/init-db.sh
+
+  postgres_shard_1:
+    <<: *postgres-base
+    container_name: postgres_shard_1
+    ports:
+      - "5434:5432"
+    environment:
+      <<: *postgres-env
+    volumes:
+      - postgres_shard_1_data:/var/lib/postgresql/data
+      - ./db/init-postgres-shards.sh:/docker-entrypoint-initdb.d/init-db.sh
 
   redis:
     image: redis:8.2
@@ -276,23 +315,37 @@ services:
       start_period: 60s
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
+    <<: *postgres-exporter
     container_name: postgres-exporter
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB_NAME}?sslmode=disable"
     ports:
       - "9187:9187"
-    networks:
-      - backend
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9187/metrics" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+
+  postgres-exporter-shard-0:
+    <<: *postgres-exporter
+    container_name: postgres-exporter-shard-0
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shard_0:5432/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - "9188:9187"
+    depends_on:
+      postgres_shard_0:
+        condition: service_healthy
+
+  postgres-exporter-shard-1:
+    <<: *postgres-exporter
+    container_name: postgres-exporter-shard-1
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shard_1:5432/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - "9189:9187"
+    depends_on:
+      postgres_shard_1:
+        condition: service_healthy
 
   kafka-exporter:
     image: danielqsj/kafka-exporter:latest
@@ -342,6 +395,10 @@ services:
 volumes:
   postgres_data:
     name: ourcode-iot-postgres-data
+  postgres_shard_0_data:
+    name: ourcode-iot-postgres-data-shard-0
+  postgres_shard_1_data:
+    name: ourcode-iot-postgres-data-shard-1
   redis_insight_data:
     name: ourcode-iot-redis-insight-data
   cassandra_data:
