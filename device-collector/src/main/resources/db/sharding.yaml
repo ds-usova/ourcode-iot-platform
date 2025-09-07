@@ -1,0 +1,47 @@
+databaseName: iot
+
+mode:
+  type: Standalone
+  repository:
+    type: File
+    props:
+      path: .shardingsphere
+
+dataSources:
+  shard_0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: org.postgresql.Driver
+    jdbcUrl: jdbc:postgresql://localhost:5433/our_code_db
+    username: our_code_user
+    password: our_code_password
+  shard_1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: org.postgresql.Driver
+    jdbcUrl: jdbc:postgresql://localhost:5434/our_code_db
+    username: our_code_user
+    password: our_code_password
+
+rules:
+- !SHARDING
+  tables:
+    devices:
+      actualDataNodes: shard_${0..1}.devices
+      databaseStrategy:
+        standard:
+          shardingColumn: device_id
+          shardingAlgorithmName: deviceid_hash_mod
+  defaultDatabaseStrategy:
+    standard:
+      shardingColumn: device_id
+      shardingAlgorithmName: deviceid_hash_mod
+  defaultTableStrategy:
+    none:
+
+  shardingAlgorithms:
+    deviceid_hash_mod:
+      type: INLINE
+      props:
+        algorithm-expression: shard_${Math.abs(device_id.hashCode()) % 2}
+
+props:
+  sql-show: true

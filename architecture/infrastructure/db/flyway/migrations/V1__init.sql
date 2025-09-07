@@ -1,9 +1,7 @@
-CREATE SCHEMA IF NOT EXISTS iot;
-
-CREATE TABLE iot.devices
+CREATE TABLE public.devices
 (
     device_id   TEXT PRIMARY KEY,
-    name        TEXT NOT NULL,
-    created_at  TIMESTAMP WITH TIME ZONE NOT NULL,
+    device_type TEXT   NOT NULL,
+    created_at  BIGINT NOT NULL,
     meta        TEXT
 );

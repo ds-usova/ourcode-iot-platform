@@ -13,7 +13,7 @@ spring:
       auto-create: false
     consumer:
       auto-offset-reset: latest
-      group-id: event-collector-group
+      group-id: device-collector-group
       enable-auto-commit: false
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
@@ -26,6 +26,14 @@ spring:
         max.poll.interval.ms: 300000
         session.timeout.ms: 10000
         heartbeat.interval.ms: 3000
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      retries: 5
+      retry-backoff-ms: 1000
+      acks: all
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
 
 app:
   kafka:

@@ -1,4 +1,4 @@
-package org.ourcode.devicecollector.kafka.configuration.producer;
+package org.ourcode.devicecollector.kafka.producer;
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.kafka.clients.producer.ProducerConfig;

@@ -3,6 +3,9 @@
   "name": "Device",
   "namespace": "com.ourcode.avro",
   "fields": [
-    { "name": "deviceId", "type": "string" }
+    { "name": "deviceId", "type": "string" },
+    { "name": "deviceType", "type": ["null", "string"] },
+    { "name": "createdAt", "type": ["null", "long"] },
+    { "name": "meta", "type": ["null", "string"] }
   ]
 }

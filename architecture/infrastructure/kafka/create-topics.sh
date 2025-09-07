@@ -30,7 +30,13 @@ $KAFKA_BIN/kafka-topics.sh --create --if-not-exists \
   --bootstrap-server "$BOOTSTRAP_SERVER" \
   --replication-factor 1 \
   --partitions 3 \
-  --topic device-ids
+  --topic device-ids\
+
+$KAFKA_BIN/kafka-topics.sh --create --if-not-exists \
+  --bootstrap-server "$BOOTSTRAP_SERVER" \
+  --replication-factor 1 \
+  --partitions 3 \
+  --topic device-ids-dlt
 
 echo "======================================="
 echo "All topics created (or already existed)."
