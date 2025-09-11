@@ -59,7 +59,6 @@ services:
       <<: *postgres-env
     volumes:
       - postgres_shard_0_data:/var/lib/postgresql/data
-      - ./db/init-postgres-shards.sh:/docker-entrypoint-initdb.d/init-db.sh
 
   postgres_shard_1:
     <<: *postgres-base
@@ -70,26 +69,6 @@ services:
       <<: *postgres-env
     volumes:
       - postgres_shard_1_data:/var/lib/postgresql/data
-      - ./db/init-postgres-shards.sh:/docker-entrypoint-initdb.d/init-db.sh
-
-  flyway:
-    image: flyway/flyway:11
-    container_name: flyway
-    entrypoint: ["/flyway/migrate-shards.sh"]
-    environment:
-      DB_NAME: ${POSTGRES_DB_NAME}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - ./db/flyway/migrate-shards.sh:/flyway/migrate-shards.sh
-      - ./db/flyway/migrations:/flyway/migrations
-    depends_on:
-      postgres_shard_0:
-        condition: service_healthy
-      postgres_shard_1:
-        condition: service_healthy
-    networks:
-      - backend
 
   redis:
     image: redis:8.2

@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.ourcode.devicecollector.DeviceCollectorService;
+import org.ourcode.devicecollector.DeviceCollectorApplication;
 import org.ourcode.devicecollector.kafka.configuration.KafkaTopics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +23,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ActiveProfiles("test")
 @Import(TestConfiguration.class)
 @Testcontainers(disabledWithoutDocker = true)
-@SpringBootTest(classes = DeviceCollectorService.class)
+@SpringBootTest(classes = DeviceCollectorApplication.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractIntegrationTest {
 

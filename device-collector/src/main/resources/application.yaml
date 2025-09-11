@@ -7,6 +7,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  flyway:
+    enabled: false
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     admin:
@@ -34,6 +36,16 @@ spring:
       acks: all
       properties:
         schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+
+flyway:
+  locations: classpath:db/migrations
+  dataSources:
+    - url: ${SHARD_0_URL:jdbc:postgresql://localhost:5433/our_code_db}
+      username: ${SHARD_0_USER:our_code_user}
+      password: ${SHARD_0_PASSWORD:our_code_password}
+    - url: ${SHARD_1_URL:jdbc:postgresql://localhost:5434/our_code_db}
+      username: ${SHARD_1_USER:our_code_user}
+      password: ${SHARD_1_PASSWORD:our_code_password}
 
 app:
   kafka:
