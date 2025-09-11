@@ -1,5 +1,6 @@
 package org.ourcode.devicecollector.persistence.entity;
 
+import org.ourcode.devicecollector.api.model.Device;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
@@ -63,6 +64,15 @@ public class DeviceEntity implements Persistable<String> {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public Device toModel() {
+        return new Device(
+                this.id,
+                this.type,
+                this.createdAt,
+                this.metadata
+        );
     }
 
 }

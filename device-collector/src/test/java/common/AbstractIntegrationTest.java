@@ -1,6 +1,7 @@
 package common;
 
 import common.containers.KafkaContainer;
+import common.containers.PostgresContainers;
 import common.containers.SchemaRegistryContainer;
 import common.containers.ToxiproxyContainer;
 import jakarta.annotation.PostConstruct;
@@ -13,7 +14,6 @@ import org.ourcode.devicecollector.DeviceCollectorApplication;
 import org.ourcode.devicecollector.kafka.configuration.KafkaTopics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -21,7 +21,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Slf4j
 @ActiveProfiles("test")
-@Import(TestConfiguration.class)
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(classes = DeviceCollectorApplication.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
@@ -36,6 +35,8 @@ public abstract class AbstractIntegrationTest {
     static {
         log.info("Kafka is running: {}", KafkaContainer.CONTAINER.isRunning());
         log.info("Schema Registry is running: {}", SchemaRegistryContainer.CONTAINER.isRunning());
+        log.info("Postgres 0 is running: {}", PostgresContainers.CONTAINER_0.isRunning());
+        log.info("Postgres 1 is running: {}", PostgresContainers.CONTAINER_1.isRunning());
         log.info("Toxi proxy is running: {}", ToxiproxyContainer.CONTAINER.isRunning());
     }
 
@@ -58,6 +59,7 @@ public abstract class AbstractIntegrationTest {
 
     @BeforeAll
     static void setUpBeforeAll() {
+        PostgresContainers.setShardEnv();
         new SchemaManager(schemaRegistryUrl()).registerSchemas();
     }
 
