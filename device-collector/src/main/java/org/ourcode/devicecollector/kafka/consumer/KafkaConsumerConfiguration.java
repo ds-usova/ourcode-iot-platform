@@ -47,6 +47,9 @@ public class KafkaConsumerConfiguration {
     @Value("${spring.kafka.consumer.concurrency}")
     private int listenerConcurrency;
 
+    @Value("${spring.kafka.consumer.properties.max.poll.records}")
+    private int maxPollRecords;
+
     @Bean
     public ConsumerFactory<String, Device> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
@@ -62,6 +65,8 @@ public class KafkaConsumerConfiguration {
         // schema registry
         props.put("schema.registry.url", schemaRegistryUrl);
         props.put("specific.avro.reader", specificAvroReader);
+
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
@@ -82,6 +87,7 @@ public class KafkaConsumerConfiguration {
         factory.setConcurrency(listenerConcurrency);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         factory.setCommonErrorHandler(errorHandler);
+        factory.setBatchListener(true);
         return factory;
     }
 

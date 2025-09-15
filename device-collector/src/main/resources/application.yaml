@@ -31,6 +31,7 @@ spring:
         max.poll.interval.ms: 300000
         session.timeout.ms: 10000
         heartbeat.interval.ms: 3000
+        max.poll.records: 100
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
