@@ -1,8 +1,10 @@
 package org.ourcode.devicecollector.persistence;
 
 import lombok.extern.slf4j.Slf4j;
+import org.ourcode.devicecollector.api.exception.PersistenceException;
 import org.ourcode.devicecollector.api.gateway.DeviceGateway;
 import org.ourcode.devicecollector.api.model.Device;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -22,6 +24,8 @@ public class PostgresDeviceGateway implements DeviceGateway {
 
     @Override
     public void upsertAll(List<Device> devices) {
+        log.debug("Upserting {} devices", devices.size());
+
         String sql = """
             INSERT INTO devices (device_id, device_type, created_at, meta)
             VALUES (:deviceId, :deviceType, :createdAt, :metadata)
@@ -40,7 +44,12 @@ public class PostgresDeviceGateway implements DeviceGateway {
                         .addValue("metadata", device.metadata()))
                 .toArray(SqlParameterSource[]::new);
 
-        jdbcTemplate.batchUpdate(sql, batch);
+        try {
+            jdbcTemplate.batchUpdate(sql, batch);
+        } catch (DataAccessException e) {
+            log.error("Error upserting devices", e);
+            throw new PersistenceException("Error upserting devices", e);
+        }
     }
 
 }

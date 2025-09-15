@@ -3,6 +3,7 @@ package org.ourcode.devicecollector.kafka;
 import com.ourcode.avro.Device;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.ourcode.devicecollector.api.service.DeviceCollector;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -12,6 +13,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class DeviceKafkaConsumer {
+
+    private final DeviceCollector deviceCollector;
+
+    public DeviceKafkaConsumer(DeviceCollector deviceCollector) {
+        this.deviceCollector = deviceCollector;
+    }
 
     @KafkaListener(topics = "${app.kafka.topics.devices}", groupId = "${spring.kafka.consumer.group-id}")
     public void listen(
