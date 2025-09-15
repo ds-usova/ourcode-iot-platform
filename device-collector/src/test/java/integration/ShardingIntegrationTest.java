@@ -10,6 +10,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import java.util.List;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class ShardingIntegrationTest extends AbstractIntegrationTest {
@@ -32,8 +34,8 @@ public class ShardingIntegrationTest extends AbstractIntegrationTest {
         Device device2 = deviceWithId("device-2");
 
         // When: saving the devices
-        deviceGateway.upsert(device1);
-        deviceGateway.upsert(device2);
+        deviceGateway.upsertAll(List.of(device1));
+        deviceGateway.upsertAll(List.of(device2));
 
         // Then: each shard should contain one device
         int countInShard0 = shard0JdbcTemplate.queryForObject("SELECT COUNT(*) FROM devices WHERE device_id = ?", Integer.class, device1.id());

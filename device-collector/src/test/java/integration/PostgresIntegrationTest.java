@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import java.util.List;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class PostgresIntegrationTest extends AbstractIntegrationTest {
@@ -27,7 +29,7 @@ public class PostgresIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void testSaveNewDevice() {
-        // Given: device
+        // Given: no device is saved yet
         Device device = new Device(
                 "device-123",
                 "sensor",
@@ -35,25 +37,26 @@ public class PostgresIntegrationTest extends AbstractIntegrationTest {
                 "{\"location\":\"warehouse-1\",\"status\":\"active\"}"
         );
 
+        assertThat(deviceRepository.findById(device.id()))
+                .withFailMessage("devices table must be empty before test")
+                .isEmpty();
+
         // When: saving a new device
-        Device actual = deviceGateway.upsert(device);
+        deviceGateway.upsertAll(List.of(device));
 
-        // Then: returned event matches input
-        assertThat(actual).isEqualTo(device);
-
-        // Then: event is stored in PostgreSQL
+        // Then: saved event matches input
         DeviceEntity entityFromDb = deviceRepository.findById(device.id()).orElseThrow(
                 () -> new IllegalStateException("Device not found in DB")
         );
-        assertThat(actual.id()).isEqualTo(entityFromDb.getId());
-        assertThat(actual.timestamp()).isEqualTo(entityFromDb.getCreatedAt());
-        assertThat(actual.type()).isEqualTo(entityFromDb.getType());
-        assertThat(actual.metadata()).isEqualTo(entityFromDb.getMetadata());
+        assertThat(device.id()).isEqualTo(entityFromDb.getId());
+        assertThat(device.timestamp()).isEqualTo(entityFromDb.getCreatedAt());
+        assertThat(device.type()).isEqualTo(entityFromDb.getType());
+        assertThat(device.metadata()).isEqualTo(entityFromDb.getMetadata());
     }
 
     @Test
     void testUpdateDevice() {
-        // Given: device
+        // Given: device is already saved
         Device device = new Device(
                 "device-123",
                 "sensor",
@@ -61,29 +64,26 @@ public class PostgresIntegrationTest extends AbstractIntegrationTest {
                 "{\"location\":\"warehouse-1\",\"status\":\"active\"}"
         );
 
-        // When: updating a device
-        Device saved = deviceGateway.upsert(device);
+        deviceGateway.upsertAll(List.of(device));
 
         device = new Device(
-                saved.id(),
-                saved.type() + "-updated",
-                saved.timestamp() + 100,
+                device.id(),
+                device.type() + "-updated",
+                device.timestamp() + 100,
                 ""
         );
 
-        Device actual = deviceGateway.upsert(device);
+        // When: updating a device
+        deviceGateway.upsertAll(List.of(device));
 
         // Then: returned event matches input
-        assertThat(actual).isEqualTo(device);
-
-        // Then: event is updated in PostgreSQL
         DeviceEntity entityFromDb = deviceRepository.findById(device.id()).orElseThrow(
                 () -> new IllegalStateException("Device not found in DB")
         );
-        assertThat(actual.id()).isEqualTo(entityFromDb.getId());
-        assertThat(actual.timestamp()).isEqualTo(entityFromDb.getCreatedAt());
-        assertThat(actual.type()).isEqualTo(entityFromDb.getType());
-        assertThat(actual.metadata()).isEqualTo(entityFromDb.getMetadata());
+        assertThat(device.id()).isEqualTo(entityFromDb.getId());
+        assertThat(device.timestamp()).isEqualTo(entityFromDb.getCreatedAt());
+        assertThat(device.type()).isEqualTo(entityFromDb.getType());
+        assertThat(device.metadata()).isEqualTo(entityFromDb.getMetadata());
     }
 
 }

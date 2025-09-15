@@ -2,14 +2,15 @@ package org.ourcode.devicecollector.api.gateway;
 
 import org.ourcode.devicecollector.api.model.Device;
 
+import java.util.List;
+
 public interface DeviceGateway {
 
     /**
-     * Saves a new device or updates the existing one.
+     * Saves or updates a list of devices in batch.
      *
-     * @param device the device to save
-     * @return updated device
+     * @param devices the list of devices to save
      */
-    Device upsert(Device device);
+    void upsertAll(List<Device> devices);
 
 }
