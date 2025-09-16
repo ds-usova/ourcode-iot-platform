@@ -48,7 +48,7 @@ public class PostgresDeviceGateway implements DeviceGateway {
             jdbcTemplate.batchUpdate(sql, batch);
         } catch (DataAccessException e) {
             log.error("Error upserting devices", e);
-            throw new PersistenceException("Error upserting devices", e);
+            throw new PersistenceException(e.getMessage(), e);
         }
     }
 

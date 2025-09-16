@@ -35,19 +35,16 @@ public abstract class AbstractIntegrationTest {
     protected TestProducers testProducers;
 
     static {
+        log.info("Toxi proxy is running: {}", ToxiproxyContainer.CONTAINER.isRunning());
+
         log.info("Kafka is running: {}", KafkaContainer.CONTAINER.isRunning());
         log.info("Schema Registry is running: {}", SchemaRegistryContainer.CONTAINER.isRunning());
+
         log.info("Postgres 0 is running: {}", PostgresContainers.CONTAINER_0.isRunning());
         log.info("Postgres 1 is running: {}", PostgresContainers.CONTAINER_1.isRunning());
-        log.info("Toxi proxy is running: {}", ToxiproxyContainer.CONTAINER.isRunning());
     }
 
     protected static void setProperties(DynamicPropertyRegistry registry) {
-        setProperties(registry, false);
-    }
-
-    @SneakyThrows
-    protected static void setProperties(DynamicPropertyRegistry registry, boolean toxic) {
         registry.add("spring.kafka.bootstrap-servers", KafkaContainer.CONTAINER::getBootstrapServers);
         registry.add("spring.kafka.consumer.properties.schema.registry.url", AbstractIntegrationTest::schemaRegistryUrl);
         registry.add("spring.kafka.producer.properties.schema.registry.url", AbstractIntegrationTest::schemaRegistryUrl);
@@ -71,8 +68,10 @@ public abstract class AbstractIntegrationTest {
     }
 
     @AfterEach
+    @SneakyThrows
     void tearDown() {
         testConsumers.close();
+        PostgresContainers.resetProxies();
     }
 
     private static String schemaRegistryUrl() {

@@ -36,7 +36,7 @@ public class DeviceCollectionTest extends AbstractIntegrationTest {
      * - Device Avro schema is registered in Schema Registry
      * <p>
      * When:
-     * - Two valid devices are sent to "devices" topic
+     * - Two valid devices are sent to "device-ids" topic
      * <p>
      * Then:
      * - Both devices are saved in database
@@ -75,7 +75,7 @@ public class DeviceCollectionTest extends AbstractIntegrationTest {
      * - Device Avro schema is registered in Schema Registry
      * <p>
      * When:
-     * - Device is sent to "devices" topic twice with the same deviceId
+     * - Device is sent to "device-ids" topic twice with the same deviceId
      * <p>
      * Then:
      * - Device is updated in the database (not duplicated)
@@ -123,7 +123,7 @@ public class DeviceCollectionTest extends AbstractIntegrationTest {
 
     /**
      * Given:
-     * - Invalid Avro message is sent to "devices" topic
+     * - Invalid Avro message is sent to "device-ids" topic
      * <p>
      * When:
      * - The message is consumed

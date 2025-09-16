@@ -23,7 +23,7 @@ public class SchemaManager {
 
     public void registerSchemas() {
         registerSchema(DeviceEvent.getClassSchema(), "events");
-        registerSchema(Device.getClassSchema(), "devices");
+        registerSchema(Device.getClassSchema(), "device-ids");
         registerSchema(DeviceEventDeadLetter.getClassSchema(), "events-dlt");
     }
 
