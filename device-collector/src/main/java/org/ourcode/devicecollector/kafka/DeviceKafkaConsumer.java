@@ -1,8 +1,8 @@
 package org.ourcode.devicecollector.kafka;
 
-import com.ourcode.avro.Device;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.ourcode.avro.Device;
 import org.ourcode.devicecollector.api.service.DeviceCollector;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;

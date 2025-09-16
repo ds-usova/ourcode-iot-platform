@@ -1,12 +1,12 @@
 package common;
 
-import com.ourcode.avro.Device;
-import com.ourcode.avro.DeviceEventDeadLetter;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.ourcode.avro.Device;
+import org.ourcode.avro.DeviceEventDeadLetter;
 import org.ourcode.eventcollector.kafka.configuration.KafkaTopics;
 
 import java.time.Duration;

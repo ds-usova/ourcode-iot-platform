@@ -3,7 +3,6 @@ plugins {
     id "jacoco"
     id "org.springframework.boot" version "$springBootVersion"
     id "io.spring.dependency-management" version "$springDependencyManagementVersion"
-    id "com.github.davidmc24.gradle.plugin.avro" version "$avroPluginVersion"
 }
 
 group = "org.ourcode"
@@ -24,8 +23,18 @@ java {
 
 repositories {
     mavenCentral()
+
     maven {
         url = 'https://packages.confluent.io/maven/'
+    }
+
+    maven {
+        allowInsecureProtocol = true
+        url = uri("http://localhost:8081/artifactory/iot-libs-release-local")
+        credentials {
+            username = findProperty("artifactory_user") ?: "admin"
+            password = findProperty("artifactory_password") ?: "password"
+        }
     }
 }
 
@@ -45,7 +54,7 @@ dependencies {
     // Kafka
     implementation "org.springframework.kafka:spring-kafka"
     implementation "io.confluent:kafka-avro-serializer:${kafkaAvroSerializerVersion}"
-    implementation "org.apache.avro:avro:${avroVersion}"
+    implementation "org.ourcode:avro-schemas:${avroSchemasVersion}"
 
     // Lombok
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
@@ -75,11 +84,6 @@ tasks.named("test") {
 
 tasks.withType(JavaCompile).configureEach {
     options.annotationProcessorPath = configurations.annotationProcessor
-}
-
-avro {
-    createSetters = true
-    fieldVisibility = 'PRIVATE'
 }
 
 test {

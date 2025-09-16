@@ -1,9 +1,9 @@
 package org.ourcode.devicecollector.kafka.consumer;
 
-import com.ourcode.avro.Device;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.ourcode.avro.Device;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

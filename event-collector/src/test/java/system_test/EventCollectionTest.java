@@ -1,12 +1,12 @@
 package system_test;
 
-import com.ourcode.avro.Device;
-import com.ourcode.avro.DeviceEvent;
-import com.ourcode.avro.DeviceEventDeadLetter;
 import common.AbstractIntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.ourcode.avro.Device;
+import org.ourcode.avro.DeviceEvent;
+import org.ourcode.avro.DeviceEventDeadLetter;
 import org.ourcode.eventcollector.cassandra.DeviceEventEntity;
 import org.ourcode.eventcollector.cassandra.DeviceEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;

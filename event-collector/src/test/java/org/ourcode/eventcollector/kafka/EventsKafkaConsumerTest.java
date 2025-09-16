@@ -1,11 +1,11 @@
 package org.ourcode.eventcollector.kafka;
 
-import com.ourcode.avro.DeviceEvent;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.ourcode.avro.DeviceEvent;
 import org.ourcode.eventcollector.api.service.DeviceEventCollector;
 import org.springframework.kafka.support.Acknowledgment;
 

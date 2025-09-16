@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "DeviceEvent",
-  "namespace": "com.ourcode.avro",
+  "namespace": "org.ourcode.avro",
   "fields": [
     { "name": "eventId", "type": "string" },
     { "name": "deviceId", "type": "string" },
