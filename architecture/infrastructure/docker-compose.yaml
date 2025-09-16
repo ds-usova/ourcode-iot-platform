@@ -363,6 +363,28 @@ services:
       timeout: 10s
       retries: 5
 
+  # Artifactory
+  artifactory:
+    image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.59.9
+    container_name: artifactory
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+    volumes:
+      - artifactory_data:/var/opt/jfrog/artifactory
+    environment:
+      JF_ROUTER_ENTRYPOINTS_EXTERNALPORT: 8082
+      JF_SHARED_DATABASE_TYPE: postgresql
+      JF_SHARED_DATABASE_DRIVER: org.postgresql.Driver
+      JF_SHARED_DATABASE_USERNAME: ${POSTGRES_USER}
+      JF_SHARED_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      JF_SHARED_DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_NAME}
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   # Application
   event-collector:
     image: event-collector:latest
@@ -405,6 +427,8 @@ volumes:
     name: ourcode-iot-minio-data
   grafana_data:
     name: ourcode-iot-grafana-data
+  artifactory_data:
+    name: ourcode-iot-artifactory-data
 
 networks:
   backend:

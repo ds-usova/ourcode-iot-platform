@@ -1,0 +1,53 @@
+plugins {
+    id "java"
+    id "maven-publish"
+    id "com.github.davidmc24.gradle.plugin.avro" version "$avroPluginVersion"
+}
+
+group = "org.ourcode"
+version = "$appVersion"
+description = "avro-schemas"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+dependencies {
+    implementation "org.apache.avro:avro:${avroVersion}"
+}
+
+repositories {
+    mavenCentral()
+}
+
+avro {
+    createSetters = true
+    fieldVisibility = 'PRIVATE'
+}
+
+publishing {
+
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = project.group.toString()
+            artifactId = project.name.toString()
+            version = project.version.toString()
+        }
+    }
+
+    repositories {
+        maven {
+            name = "localArtifactory"
+            allowInsecureProtocol = true
+            url = uri("http://localhost:8081/artifactory/iot-libs-release-local")
+            credentials {
+                username = findProperty("artifactory_user") ?: "admin"
+                password = findProperty("artifactory_password") ?: "password"
+            }
+        }
+    }
+
+}
