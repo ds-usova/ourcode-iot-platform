@@ -6,6 +6,8 @@ import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
+import org.ourcode.avro.Device;
+import org.ourcode.avro.DeviceDeadLetter;
 
 import java.io.IOException;
 
@@ -19,6 +21,8 @@ public class SchemaManager {
     }
 
     public void registerSchemas() {
+        registerSchema(Device.getClassSchema(), "device-ids");
+        registerSchema(DeviceDeadLetter.getClassSchema(), "device-ids-dlt");
     }
 
     private void registerSchema(Schema schema, String topic) {
