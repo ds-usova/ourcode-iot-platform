@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "Device",
+  "namespace": "com.ourcode.avro",
+  "fields": [
+    { "name": "deviceId", "type": "string" },
+    { "name": "deviceType", "type": ["string", "null"], "default": "N/A" },
+    { "name": "createdAt", "type": ["long", "null"], "default": 0 },
+    { "name": "meta", "type": ["string", "null"], "default": "" }
+  ]
+}

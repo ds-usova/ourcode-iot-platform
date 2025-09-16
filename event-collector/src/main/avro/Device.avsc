@@ -1,8 +1,0 @@
-{
-  "type": "record",
-  "name": "Device",
-  "namespace": "com.ourcode.avro",
-  "fields": [
-    { "name": "deviceId", "type": "string" }
-  ]
-}
