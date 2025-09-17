@@ -1,13 +1,11 @@
 package org.ourcode.devicecollector.persistence.entity;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Table("devices")
-public class DeviceEntity implements Persistable<String> {
+public class DeviceEntity {
 
     @Id
     @Column("device_id")
@@ -21,17 +19,6 @@ public class DeviceEntity implements Persistable<String> {
 
     @Column("meta")
     private String metadata;
-
-    @Transient
-    private boolean isNew = false;
-
-    public boolean isNew() {
-        return isNew;
-    }
-
-    public void setNew(boolean aNew) {
-        isNew = aNew;
-    }
 
     public String getId() {
         return id;

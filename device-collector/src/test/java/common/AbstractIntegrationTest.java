@@ -70,8 +70,8 @@ public abstract class AbstractIntegrationTest {
     @AfterEach
     @SneakyThrows
     void tearDown() {
-        testConsumers.close();
         PostgresContainers.resetProxies();
+        testConsumers.close();
     }
 
     private static String schemaRegistryUrl() {

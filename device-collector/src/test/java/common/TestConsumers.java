@@ -70,6 +70,7 @@ public class TestConsumers {
                 .forEach(it -> records.put(it.key(), it.value()));
 
         log.info("Read {} records from topic {}", records.size(), topic);
+        records.forEach((key, value) -> log.info("Key: {}, Value: {}", key, value));
         return records;
     }
 
