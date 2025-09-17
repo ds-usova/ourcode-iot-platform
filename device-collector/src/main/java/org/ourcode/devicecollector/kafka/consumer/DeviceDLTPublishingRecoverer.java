@@ -17,9 +17,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @Slf4j
-public class DeviceDeadLetterPublishingRecoverer extends DeadLetterPublishingRecoverer {
+public class DeviceDLTPublishingRecoverer extends DeadLetterPublishingRecoverer {
 
-    public DeviceDeadLetterPublishingRecoverer(KafkaTemplate<String, Object> kafkaTemplate) {
+    public DeviceDLTPublishingRecoverer(KafkaTemplate<String, Object> kafkaTemplate) {
         super(kafkaTemplate);
     }
 

@@ -5,14 +5,15 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.ourcode.avro.Device;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ConsumerRecordRecoverer;
 import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.util.backoff.FixedBackOff;
@@ -71,13 +72,16 @@ public class KafkaConsumerConfiguration {
     }
 
     @Bean
-    public DeadLetterPublishingRecoverer deadLetterPublishingRecoverer(KafkaTemplate<String, Object> kafkaTemplate) {
-        return new DeviceDeadLetterPublishingRecoverer(kafkaTemplate);
+    public ConsumerRecordRecoverer deviceRecoverer(
+            KafkaTemplate<String, Object> kafkaTemplate,
+            ApplicationEventPublisher applicationEventPublisher
+    ) {
+        return new DeviceReportingRecoverer(applicationEventPublisher, new DeviceDLTPublishingRecoverer(kafkaTemplate));
     }
 
     @Bean
-    public DefaultErrorHandler errorHandler(DeadLetterPublishingRecoverer deadLetterPublishingRecoverer) {
-        return new DefaultErrorHandler(deadLetterPublishingRecoverer, new FixedBackOff(backoffInterval, backoffMaxAttempts));
+    public DefaultErrorHandler errorHandler(ConsumerRecordRecoverer deviceRecoverer) {
+        return new DefaultErrorHandler(deviceRecoverer, new FixedBackOff(backoffInterval, backoffMaxAttempts));
     }
 
     @Bean
