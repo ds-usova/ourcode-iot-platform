@@ -57,8 +57,27 @@ services:
       - "5433:5432"
     environment:
       <<: *postgres-env
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
     volumes:
+      - ./db/sharding/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
       - postgres_shard_0_data:/var/lib/postgresql/data
+
+  postgres_shard_0_replica:
+    <<: *postgres-base
+    container_name: postgres_shard_0_replica
+    hostname: postgres_shard_0_replica
+    ports:
+      - "5435:5432"
+    environment:
+      <<: *postgres-env
+      PGUSER: ${POSTGRES_USER}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+    volumes:
+      - ./db/sharding/init-replica.sh:/docker-entrypoint-initdb.d/init-replica.sh
+      - postgres_shard_0_replica_data:/var/lib/postgresql/data
+    depends_on:
+      postgres_shard_0:
+        condition: service_healthy
 
   postgres_shard_1:
     <<: *postgres-base
@@ -427,6 +446,8 @@ volumes:
     name: ourcode-iot-minio-data
   grafana_data:
     name: ourcode-iot-grafana-data
+  postgres_shard_0_replica_data:
+    name: ourcode-iot-postgres-data-shard-0-replica
   artifactory_data:
     name: ourcode-iot-artifactory-data
 
