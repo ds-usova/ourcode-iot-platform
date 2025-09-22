@@ -34,10 +34,7 @@ EOF
 cat >> "$PGDATA/pg_hba.conf" <<EOF
 
 # Replication connections
-host replication replicator postgres_shard_0_replica md5
-host replication replicator 172.16.0.0/12 md5
-host replication replicator 192.168.0.0/16 md5
-host replication replicator 10.0.0.0/8 md5
+host replication replicator 0.0.0.0/0 md5
 EOF
 
 echo "Master configuration completed!"
