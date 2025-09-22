@@ -1,6 +1,7 @@
 package system_test;
 
 import common.AbstractIntegrationTest;
+import common.containers.PostgresContainers;
 import eu.rekawek.toxiproxy.model.ToxicDirection;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -73,8 +74,7 @@ public class ToxicTest extends AbstractIntegrationTest {
         assertThat(deadLetter.getErrorMessage()).contains("request timed out");
         assertThat(deadLetter.getRawEvent()).isNull();
 
-        PROXY_0.toxics().get("cut_connection").remove();
-        PROXY_1.toxics().get("cut_connection").remove();
+        PostgresContainers.resetProxies();
     }
 
 }
