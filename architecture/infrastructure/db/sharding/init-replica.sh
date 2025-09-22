@@ -2,9 +2,10 @@
 set -e
 
 echo "Configuring PostgreSQL replica for streaming replication..."
+echo "Primary host: ${PRIMARY}"
 
 # Wait for master to be ready
-until pg_isready -h postgres_shard_0 -p 5432 -U "$POSTGRES_USER"; do
+until pg_isready -h ${PRIMARY} -p 5432 -U "$POSTGRES_USER"; do
     echo "Waiting for master to be ready..."
     sleep 2
 done
@@ -22,7 +23,7 @@ rm -rf "$PGDATA"/*
 # -W = prompt for password
 echo "Creating base backup from master..."
 PGPASSWORD="${POSTGRES_REPLICATION_PASSWORD}" pg_basebackup \
-    -h postgres_shard_0 \
+    -h ${PRIMARY} \
     -D "$PGDATA" \
     -U replicator \
     -v \
@@ -49,7 +50,7 @@ wal_receiver_timeout = 60s
 wal_retrieve_retry_interval = 5s
 
 # Replica connection info with better error handling
-primary_conninfo = 'host=postgres_shard_0 port=5432 user=replicator password=${POSTGRES_REPLICATION_PASSWORD} application_name=shard_0_replica connect_timeout=10'
+primary_conninfo = 'host=${PRIMARY} port=5432 user=replicator password=${POSTGRES_REPLICATION_PASSWORD} application_name=shard_0_replica connect_timeout=10'
 EOF
 
 # Set permissions
