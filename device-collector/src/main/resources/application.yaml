@@ -44,10 +44,12 @@ spring:
 flyway:
   locations: classpath:db/migrations
   dataSources:
-    - url: ${SHARD_0_JDBC_URL:jdbc:postgresql://localhost:5433/our_code_db}
+    - name: shard_0
+      url: ${SHARD_0_JDBC_URL:jdbc:postgresql://localhost:5433/our_code_db}
       username: ${SHARD_0_USER:our_code_user}
       password: ${SHARD_0_PASSWORD:our_code_password}
-    - url: ${SHARD_1_JDBC_URL:jdbc:postgresql://localhost:5434/our_code_db}
+    - name: shard_1
+      url: ${SHARD_1_JDBC_URL:jdbc:postgresql://localhost:5434/our_code_db}
       username: ${SHARD_1_USER:our_code_user}
       password: ${SHARD_1_PASSWORD:our_code_password}
 
@@ -68,3 +70,12 @@ management:
   endpoint:
     prometheus:
       enabled: true
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState, ping
+        readiness:
+          include: readinessState, shard, kafka

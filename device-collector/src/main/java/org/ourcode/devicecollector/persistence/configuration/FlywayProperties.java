@@ -10,6 +10,6 @@ public record FlywayProperties(
         List<DataSource> dataSources
 ) {
 
-    public record DataSource(String url, String username, String password) { }
+    public record DataSource(String name, String url, String username, String password) { }
 
 }
