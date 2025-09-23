@@ -16,7 +16,6 @@ The service consists of the following components:
 
 ## Container Diagram
 
-{Todo}
 ![Diagram](architecture/diagrams/image/container-diagram.png)
 
 ## Event Processing Flow
