@@ -23,25 +23,26 @@ The service consists of the following components:
 ![Diagram](architecture/diagrams/image/consume-device-flow.png)
 
 ## Project Structure
-Todo: update project structure
 ```plaintext
 device-collector/
 ├── architecture/
 │   ├── diagrams/                    # C4 diagrams
 │   │   ├── image/                   # Images generated from PlantUML
+│   │   ├── consume-device-flow.puml
 │   │   ├── containers.puml
 │   │   └── context.puml
 │   └── src/main/
-│       ├── avro/                    # Avro schemas
 │       ├── java/
 │       │   ├── api/                 # Service API (doesn't depend on any other layers)
+│       │   │   ├── events/          # Application events
 │       │   │   ├── exception/
 │       │   │   ├── gateway/         # Gateway interfaces (data providers/consumers)
 │       │   │   ├── model/           # Model classes
 │       │   │   └── service/         # Business logic interfaces
 │       │   ├── application/         # Business logic implementations
-│       │   ├── cache/               
 │       │   ├── kafka/               
+│       │   ├── metrics/               
+│       │   ├── persistence/               
 │       │   └── DeviceCollectorApplication.java
 │       └── resources/
 └── README.md
