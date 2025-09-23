@@ -2,7 +2,7 @@
 
 ## Architecture Overview
 
-{Todo description}
+Device Collector is a microservice designed to collect and process data from various IoT devices. It ingests data through Kafka topics, processes the information, and stores it in a PostgreSQL database.
 
 The service consists of the following components:
 
