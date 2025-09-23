@@ -6,13 +6,12 @@
 
 The service consists of the following components:
 
-- **Data Storage**: Todo
-- **Messaging**: Todo
-- **Observability**: Todo
+- **Data Storage**: PostgreSQL database (two shards with read replicas), Sharding Sphere JDBC
+- **Messaging**: Kafka with Schema Registry
+- **Observability**: Prometheus, Grafana
 
 ## Context Diagram
 
-{Todo}
 ![Diagram](architecture/diagrams/image/context-diagram.png)
 
 ## Container Diagram

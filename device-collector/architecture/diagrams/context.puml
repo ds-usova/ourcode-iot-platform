@@ -4,10 +4,12 @@
 title Device Collector - Context Diagram
 
 ' Internal
-System(device_collector, "Device Collector", "TODO")
+System(device_collector, "Device Collector", "Collects IoT devices")
 
 ' External systems
+System_Ext(event_collector, "Event Collector", "Processes events from IoT devices")
 
 ' Relations
+Rel_L(device_collector, event_collector, "Reads devices", "MQTT")
 
 @enduml
