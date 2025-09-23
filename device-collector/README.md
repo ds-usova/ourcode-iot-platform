@@ -18,9 +18,8 @@ The service consists of the following components:
 
 ![Diagram](architecture/diagrams/image/container-diagram.png)
 
-## Event Processing Flow
+## Device Processing Flow
 
-{Todo}
 ![Diagram](architecture/diagrams/image/consume-device-flow.png)
 
 ## Project Structure
