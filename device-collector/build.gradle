@@ -51,6 +51,9 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "io.micrometer:micrometer-registry-prometheus"
 
+    // Retry
+    implementation "org.springframework.boot:spring-boot-starter-aop"
+
     // Kafka
     implementation "org.springframework.kafka:spring-kafka"
     implementation "io.confluent:kafka-avro-serializer:${kafkaAvroSerializerVersion}"

@@ -9,7 +9,7 @@ spring:
       enable-auto-commit: false
       key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      backoff-interval: 1000
+      backoff-interval: 100
       backoff-max-attempts: 1
       concurrency: 1
       properties:

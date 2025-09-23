@@ -28,6 +28,9 @@ public class ToxicTest extends AbstractIntegrationTest {
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
         AbstractIntegrationTest.setProperties(registry);
+        // Set low retry attempts and backoff delay for faster tests
+        registry.add("spring.retry.device-gateway.max-attempts", () -> 2);
+        registry.add("spring.retry.device-gateway.backoff-delay", () -> 100);
     }
 
     /**
@@ -57,7 +60,7 @@ public class ToxicTest extends AbstractIntegrationTest {
         testProducers.sendDevices(List.of(device));
 
         Map<String, DeviceDeadLetter> deadLetters = new HashMap<>();
-        Awaitility.await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofSeconds(1)).untilAsserted(() -> {
+        Awaitility.await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofSeconds(5)).untilAsserted(() -> {
             deadLetters.clear();
             deadLetters.putAll(testConsumers.readDlt());
 

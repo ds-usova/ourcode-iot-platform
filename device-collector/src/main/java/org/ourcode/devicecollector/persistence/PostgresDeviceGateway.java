@@ -8,6 +8,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -23,6 +25,11 @@ public class PostgresDeviceGateway implements DeviceGateway {
     }
 
     @Override
+    @Retryable(
+            retryFor = PersistenceException.class,
+            maxAttemptsExpression = "${spring.retry.device-gateway.max-attempts}",
+            backoff = @Backoff(delayExpression = "${spring.retry.device-gateway.backoff-delay}")
+    )
     public void upsertAll(List<Device> devices) {
         log.debug("Upserting {} devices", devices.size());
 

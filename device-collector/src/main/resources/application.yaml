@@ -40,6 +40,10 @@ spring:
       acks: all
       properties:
         schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+  retry:
+    device-gateway:
+      max-attempts: 3
+      backoff-delay: 500
 
 flyway:
   locations: classpath:db/migrations
