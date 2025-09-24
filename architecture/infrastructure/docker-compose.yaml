@@ -428,8 +428,8 @@ services:
     image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.59.9
     container_name: artifactory
     ports:
-      - "8081:8081"
-      - "8082:8082"
+      - "8001:8081"
+      - "8002:8082"
     volumes:
       - artifactory_data:/var/opt/jfrog/artifactory
     environment:
@@ -445,7 +445,7 @@ services:
       postgres:
         condition: service_healthy
 
-  # Application
+  # Applications
   event-collector:
     image: event-collector:latest
     container_name: event-collector
@@ -471,6 +471,59 @@ services:
       - SCHEMA_REGISTRY_URL=http://schema-registry:8081
       - CASSANDRA_CONTACT_POINTS=cassandra
       - CASSANDRA_PORT=9042
+
+  device-collector:
+    image: device-collector:latest
+    container_name: device-collector
+    ports:
+      - "8091:8090"
+    build:
+      context: ./../../device-collector
+      network: host
+      args:
+        ARTIFACTORY_HOST: artifactory:8081
+    networks:
+      - backend
+    depends_on:
+      artifactory:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      schema-registry:
+        condition: service_started
+      postgres_shard_0:
+        condition: service_healthy
+      postgres_shard_0_replica:
+        condition: service_healthy
+      postgres_shard_1:
+        condition: service_healthy
+      postgres_shard_1_replica:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      # Shard 0
+      SHARD_0_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
+      SHARD_0_USER: ${POSTGRES_USER}
+      SHARD_0_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_0_CONNECTION_TIMEOUT: 30000
+      # Shard 0 replica
+      SHARD_0_REPLICA_JDBC_URL: jdbc:postgresql://postgres_shard_0_replica:5432/${POSTGRES_DB_NAME}
+      SHARD_0_REPLICA_USER: ${POSTGRES_USER}
+      SHARD_0_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_0_REPLICA_CONNECTION_TIMEOUT: 30000
+      # Shard 1
+      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
+      SHARD_1_USER: ${POSTGRES_USER}
+      SHARD_1_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_1_CONNECTION_TIMEOUT: 30000
+      # Shard 1 replica
+      SHARD_1_REPLICA_JDBC_URL: jdbc:postgresql://postgres_shard_1_replica:5432/${POSTGRES_DB_NAME}
+      SHARD_1_REPLICA_USER: ${POSTGRES_USER}
+      SHARD_1_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_1_REPLICA_CONNECTION_TIMEOUT: 30000
 
 volumes:
   postgres_data:

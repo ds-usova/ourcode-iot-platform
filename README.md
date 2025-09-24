@@ -89,3 +89,4 @@ docker-compose down
 | Camunda         | [http://localhost:8084/camunda/app/cockpit/](http://localhost:8084/camunda/app/cockpit/) | demo:demo                                 |
 | MinIO Console   | [http://localhost:9001](http://localhost:9001)                                           | MINIO_ROOT_USER:MINIO_ROOT_PASSWORD       |
 | Prometheus      | [http://localhost:9090](http://localhost:9090)                                           | N/A                                       |
+| Artifactory     | [http://localhost:8002](http://localhost:8002)                                           | admin:password                            |
