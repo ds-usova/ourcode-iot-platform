@@ -383,6 +383,28 @@ services:
       postgres_shard_1:
         condition: service_healthy
 
+  postgres-exporter-shard-0-replica:
+    <<: *postgres-exporter
+    container_name: postgres-exporter-shard-0-replica
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shard_0_replica:5432/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - "9190:9187"
+    depends_on:
+      postgres_shard_0_replica:
+        condition: service_healthy
+
+  postgres-exporter-shard-1-replica:
+    <<: *postgres-exporter
+    container_name: postgres-exporter-shard-1-replica
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shard_1_replica:5432/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - "9191:9187"
+    depends_on:
+      postgres_shard_1_replica:
+        condition: service_healthy
+
   kafka-exporter:
     image: danielqsj/kafka-exporter:latest
     container_name: kafka-exporter
