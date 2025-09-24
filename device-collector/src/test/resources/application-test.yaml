@@ -1,4 +1,7 @@
 spring:
+  datasource:
+    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
+    url: jdbc:shardingsphere:classpath:db/sharding.yaml?placeholder-type=system_props
   kafka:
     bootstrap-servers: localhost:29092
     admin:

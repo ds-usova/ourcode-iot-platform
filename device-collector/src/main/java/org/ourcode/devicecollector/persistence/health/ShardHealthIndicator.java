@@ -61,7 +61,7 @@ public class ShardHealthIndicator implements HealthIndicator {
         }
     }
 
-    private record ShardStatus(
+    public record ShardStatus(
             String name,
             String url,
             boolean isUp,

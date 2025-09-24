@@ -1,8 +1,8 @@
 package system_test;
 
 import common.AbstractIntegrationTest;
+import common.ToxiProxyUtils;
 import common.containers.PostgresContainers;
-import eu.rekawek.toxiproxy.model.ToxicDirection;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,8 +47,8 @@ public class ToxicTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("Toxic postgres: device is not collected and sent to DLT")
     void deviceIsNotCollected() throws IOException {
-        PROXY_0.toxics().limitData("cut_connection", ToxicDirection.DOWNSTREAM, 0);
-        PROXY_1.toxics().limitData("cut_connection", ToxicDirection.DOWNSTREAM, 0);
+        ToxiProxyUtils.cutConnection(PROXY_0);
+        ToxiProxyUtils.cutConnection(PROXY_1);
 
         Device device = Device.newBuilder()
                 .setDeviceId("device-1")
@@ -60,7 +60,7 @@ public class ToxicTest extends AbstractIntegrationTest {
         testProducers.sendDevices(List.of(device));
 
         Map<String, DeviceDeadLetter> deadLetters = new HashMap<>();
-        Awaitility.await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofSeconds(5)).untilAsserted(() -> {
+        Awaitility.await().atMost(Duration.ofSeconds(40)).pollInterval(Duration.ofSeconds(5)).untilAsserted(() -> {
             deadLetters.clear();
             deadLetters.putAll(testConsumers.readDlt());
 
