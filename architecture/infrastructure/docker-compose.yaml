@@ -31,6 +31,7 @@ x-postgres-exporter: &postgres-exporter
     start_period: 30s
 
 services:
+  # Persistence
   postgres:
     <<: *postgres-base
     container_name: postgres_db
@@ -444,6 +445,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-sf", "http://localhost:8081/artifactory/api/system/ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # Applications
   event-collector:
@@ -453,6 +459,9 @@ services:
       - "8090:8090"
     build:
       context: ./../../event-collector
+      network: host
+      args:
+        ARTIFACTORY_HOST: artifactory:8081
     networks:
       - backend
     depends_on:
@@ -467,10 +476,18 @@ services:
       cassandra-load-keyspace:
         condition: service_completed_successfully
     environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
-      - CASSANDRA_CONTACT_POINTS=cassandra
-      - CASSANDRA_PORT=9042
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CASSANDRA_CONTACT_POINTS: cassandra
+      CASSANDRA_PORT: 9042
+
+  avro-schemas:
+    image: avro-schemas:latest
+    build:
+      context: ./../../avro-schemas
+      network: host
+      args:
+        ARTIFACTORY_HOST: artifactory:8081
 
   device-collector:
     image: device-collector:latest

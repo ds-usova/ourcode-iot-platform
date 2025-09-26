@@ -1,16 +1,24 @@
-.PHONY: help up down reset start-env-event-collector start-event-collector start-observability start-env-device-collector
+.PHONY: help up down reset start-env-event-collector start-event-collector start-observability start-env-device-collector publish-avro-schemas
 
 COMPOSE_FILE := ./architecture/infrastructure/docker-compose.yaml
+ARTIFACTORY_HOST := artifactory:8001
 
 help:
 	@echo "Makefile commands:"
 	@echo "  up                          - Start all services"
 	@echo "  down                        - Stop all services"
 	@echo "  reset                       - Reset all services (stop, remove volumes, and start)"
-	@echo "  start-env-event-collector   - Start local environment for event collector"
+
+	@echo "\n  ===== Build and start services ====="
 	@echo "  start-event-collector       - Start event collector and its dependencies"
+	@echo "  start-device-collector      - Start event collector and its dependencies"
+
+	@echo "\n  ===== Local Environment Setup ====="
+	@echo "  start-env-event-collector   - Start local environment for event collector"
 	@echo "  start-env-device-collector  - Start local environment for device collector"
 	@echo "  start-observability         - Start observability stack (Prometheus and Grafana)"
+	@echo "  start-artifactory           - Start artifactory"
+	@echo "  publish-libraries           - Publish Avro schemas to artifactory"
 
 up:
 	@echo "Starting services..."
@@ -40,3 +48,15 @@ start-observability:
 start-env-device-collector:
 	@echo "Starting local environment for device collector..."
 	docker compose -f $(COMPOSE_FILE) up -d kafka kafka-init schema-registry postgres_shard_0 postgres_shard_1 postgres_shard_0_replica postgres_shard_1_replica
+
+start-device-collector:
+	@echo "Starting device collector and required dependencies..."
+	docker compose -f $(COMPOSE_FILE) up --build -d device-collector
+
+start-artifactory:
+	@echo "Starting artifactory..."
+	docker compose -f $(COMPOSE_FILE) up -d artifactory
+
+publish-libraries:
+	@echo "Publishing to artifactory..."
+	docker compose -f $(COMPOSE_FILE) up --build -d avro-schemas

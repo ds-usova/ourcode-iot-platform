@@ -28,7 +28,10 @@ repositories {
     }
     maven {
         allowInsecureProtocol = true
-        url = uri("http://localhost:8081/artifactory/iot-libs-release-local")
+
+        def artifactoryHost = findProperty("artifactory_host") ?: "localhost:8001"
+        url = uri("http://${artifactoryHost}/artifactory/iot-libs-release-local")
+
         credentials {
             username = findProperty("artifactory_user") ?: "admin"
             password = findProperty("artifactory_password") ?: "password"

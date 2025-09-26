@@ -49,6 +49,7 @@ ourcode-iot-platform/
 
 - Git
 - Docker
+- (Optional) Switch to Linux terminal to run make commands if you're on Windows
 
 ### Starting the Platform
 
@@ -64,17 +65,49 @@ Create a `.env` file and override the default environment variables if needed.
 cd ./architecture/infrastructure; cp .env.example .env
 ```
 
-Start the platform using Docker Compose and make sure all services are healthy. You can also check some of the urls
-below to verify that the services are running correctly.
+#### Configure Artifactory
+
+Artifactory configuration is manual, since REST API and CLI are only available in Pro version ([Github issue](https://github.com/jfrog/artifactory-client-java/issues/203)).
+
+* Start Artifactory service:
 
 ```bash
-docker-compose up -d
+make start-artifactory
 ```
 
-To stop all services:
+* Make sure Artifactory container is running and healthy.
+* Open [http://localhost:8002](http://localhost:8002) in your browser and login with default credentials
+  (`admin:password`).
+* Create a new local repository named `iot-libs-release-local`
+
+![Diagram](media/jfrog-step-1.png)
+![Diagram](media/jfrog-step-2.png)
+![Diagram](media/jfrog-step-3.png)
+
+####  Publish Libraries to Artifactory
+
+* Publish libraries to Artifactory:
 
 ```bash
-docker-compose down
+make publish-libraries
+```
+* Open [Avro-schemas in Artifactory](http://localhost:8002/ui/native/iot-libs-release-local/org/ourcode/avro-schemas/)
+* Make sure the libraries are published
+
+#### Start the platform
+
+* Start all services:
+```bash
+make up
+```
+
+* Make sure all services are healthy
+* You can also check some of the urls below to verify that the services are running correctly.
+
+#### Stop the platform
+
+```bash
+make down
 ```
 
 ## Service URLs
