@@ -55,6 +55,7 @@ device-collector/
 - Git
 - Docker
 - Install Kafka plugin for your IDE (e.g., IntelliJ IDEA)
+- Create Artifactory repository (see README in root folder)
 - (Optional) Switch to Linux terminal to run make commands if you're on Windows
 
 ### Starting the Platform
