@@ -52,3 +52,9 @@ scrape_configs:
       - targets: [ 'event-collector:8090' ]
     scrape_interval: 10s
     metrics_path: /actuator/prometheus
+
+  - job_name: 'device-collector'
+    static_configs:
+      - targets: [ 'device-collector:8090' ]
+    scrape_interval: 10s
+    metrics_path: /actuator/prometheus

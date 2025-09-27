@@ -114,7 +114,7 @@ make down
 
 | Service         | URL                                                                                      | Credentials                               |
 |-----------------|------------------------------------------------------------------------------------------|-------------------------------------------|
-| Grafana         | [http://localhost:3000](http://localhost:3000)                                           | GRAFANA_ADMIN_USER:GRAFANA_ADMIN_PASSWORD |
+| Grafana         | [http://localhost:3000/dashboards](http://localhost:3000/dashboards)                               | GRAFANA_ADMIN_USER:GRAFANA_ADMIN_PASSWORD |
 | Redis Insight   | [http://localhost:5540](http://localhost:5540)                                           | N/A                                       |
 | Schema registry | [http://localhost:8081/subjects](http://localhost:8081/subjects)                         | N/A                                       |
 | Kafka UI        | [http://localhost:8082](http://localhost:8082)                                           | N/A                                       |
