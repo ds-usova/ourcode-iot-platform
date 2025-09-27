@@ -12,13 +12,13 @@ help:
 	@echo "  reset                       - Reset all services (stop, remove volumes, and start)"
 
 	@echo "\n  ===== Build and start services ====="
-	@echo "  start-event-collector       - Start event collector and its dependencies"
-	@echo "  start-device-collector      - Start event collector and its dependencies"
+	@echo "  start-event-collector                     - Start event collector and its dependencies"
+	@echo "  start-device-collector                    - Start device collector and its dependencies"
+	@echo "  start-device-collector observability      - Start device collector and observability stack"
 
 	@echo "\n  ===== Local Environment Setup ====="
 	@echo "  start-env-event-collector   			   - Start local environment for event collector"
 	@echo "  start-env-device-collector  			   - Start local environment for device collector"
-	@echo "  start-env-device-collector observability  - Start local environment for device collector and observability stack"
 	@echo "  start-observability                       - Start observability stack (Prometheus and Grafana)"
 	@echo "  start-artifactory                         - Start artifactory"
 	@echo "  publish-libraries                         - Publish Avro schemas to artifactory"

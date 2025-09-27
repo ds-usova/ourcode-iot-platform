@@ -59,8 +59,50 @@ device-collector/
 
 ### Starting the Platform
 
-{Todo}
+To start local environment with Kafka and PostgreSQL, run:
+
+```bash
+cd ..
+make start-env-device-collector
+```
+
+To start the Device Collector service, run:
+
+```bash
+cd ..
+make start-device-collector
+```
+
+To start Device Collector with observability tools (Prometheus and Grafana), run:
+
+```bash
+cd ..
+make start-device-collector observability
+```
+
+### Smoke Test
+
+* Register device-ids-value (Device.avsc) and device-ids-dlt-value (DeviceDeadLetter.avsc) schemas in Schema Registry with Kafka plugin (see src/main/avro)
+* Produce test messages to `device-ids` topic using Kafka plugin or any Kafka producer tool
+```json
+{
+  "deviceId" : "\bRrIj/h\u0018hA,;",
+  "deviceType" : {
+    "string" : "\u0002\u0016= .@0j6b"
+  },
+  "createdAt" : {
+    "long" : 8625999633872044475
+  },
+  "meta" : {
+    "string" : "\u0002\u0016= .@0j6b"
+  }
+}
+```
+
+* Open Device Collector dashboard in [Grafana](http://localhost:3000/dashboards)
+* Verify that "Number of successfully processed devices" is 1
 
 ### Plans
 
-{Todo}
+* Automate schema creation
+* Implement hot sharding rebalancing
