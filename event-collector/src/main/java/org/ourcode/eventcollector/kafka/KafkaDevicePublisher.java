@@ -1,8 +1,8 @@
 package org.ourcode.eventcollector.kafka;
 
-import com.ourcode.avro.Device;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.ourcode.avro.Device;
 import org.ourcode.eventcollector.api.exception.MessageNotPublishedException;
 import org.ourcode.eventcollector.api.gateway.DevicePublisher;
 import org.ourcode.eventcollector.api.gateway.DevicePublisherListener;

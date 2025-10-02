@@ -1,0 +1,123 @@
+plugins {
+    id "java"
+    id "jacoco"
+    id "org.springframework.boot" version "$springBootVersion"
+    id "io.spring.dependency-management" version "$springDependencyManagementVersion"
+}
+
+group = "org.ourcode"
+version = "$appVersion"
+description = "device-collector"
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url = 'https://packages.confluent.io/maven/'
+    }
+
+    maven {
+        allowInsecureProtocol = true
+
+        def artifactoryHost = findProperty("artifactory_host") ?: "localhost:8001"
+        url = uri("http://${artifactoryHost}/artifactory/iot-libs-release-local")
+
+        credentials {
+            username = findProperty("artifactory_user") ?: "admin"
+            password = findProperty("artifactory_password") ?: "password"
+        }
+    }
+}
+
+dependencies {
+    // PostgreSQL
+    implementation "org.springframework.boot:spring-boot-starter-data-jdbc"
+    implementation "org.apache.shardingsphere:shardingsphere-jdbc:${shardingJdbcVersion}"
+    implementation "org.flywaydb:flyway-core"
+    implementation "org.flywaydb:flyway-database-postgresql"
+    runtimeOnly "org.postgresql:postgresql"
+
+    // Observability
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "io.micrometer:micrometer-registry-prometheus"
+
+    // Retry
+    implementation "org.springframework.boot:spring-boot-starter-aop"
+
+    // Kafka
+    implementation "org.springframework.kafka:spring-kafka"
+    implementation "io.confluent:kafka-avro-serializer:${kafkaAvroSerializerVersion}"
+    implementation "org.ourcode:avro-schemas:${avroSchemasVersion}"
+
+    // Lombok
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    // Logging
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+
+    // Test
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.boot:spring-boot-testcontainers"
+
+    testImplementation "org.testcontainers:junit-jupiter"
+    testImplementation "org.testcontainers:kafka"
+    testImplementation "org.testcontainers:toxiproxy"
+    testImplementation "org.testcontainers:postgresql"
+
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+tasks.named("test") {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = false
+        csv.required = false
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.90
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification

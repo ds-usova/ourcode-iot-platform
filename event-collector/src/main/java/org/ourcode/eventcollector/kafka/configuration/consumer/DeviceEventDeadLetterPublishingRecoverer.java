@@ -1,13 +1,13 @@
 package org.ourcode.eventcollector.kafka.configuration.consumer;
 
-import com.ourcode.avro.DeviceEvent;
-import com.ourcode.avro.DeviceEventDeadLetter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
+import org.ourcode.avro.DeviceEvent;
+import org.ourcode.avro.DeviceEventDeadLetter;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.support.KafkaHeaders;

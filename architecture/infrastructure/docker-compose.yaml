@@ -1,12 +1,44 @@
+x-postgres-env: &postgres-env
+  POSTGRES_DB: ${POSTGRES_DB_NAME}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+
+x-postgres-base: &postgres-base
+  image: postgres:17.5
+  healthcheck:
+    test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NAME}" ]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 30s
+  deploy:
+    resources:
+      limits:
+        memory: 256M
+  networks:
+    - backend
+
+x-postgres-exporter: &postgres-exporter
+  image: prometheuscommunity/postgres-exporter:latest
+  networks:
+    - backend
+  healthcheck:
+    test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9187/metrics" ]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+
 services:
+  # Persistence
   postgres:
-    image: postgres:17.5
+    <<: *postgres-base
     container_name: postgres_db
+    ports:
+      - "5432:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB_NAME}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+      <<: *postgres-env
       # Keycloack database configuration
       KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
@@ -15,23 +47,67 @@ services:
       CAMUNDA_DB_USER: ${CAMUNDA_DB_USER}
       CAMUNDA_DB_PASSWORD: ${CAMUNDA_DB_PASSWORD}
       CAMUNDA_DB_SCHEMA: ${CAMUNDA_DB_SCHEMA}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init-postgres.sh:/docker-entrypoint-initdb.d/init-db.sh
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NAME}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    networks:
-      - backend
+
+  postgres_shard_0:
+    <<: *postgres-base
+    container_name: postgres_shard_0
+    ports:
+      - "5433:5432"
+    environment:
+      <<: *postgres-env
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+    volumes:
+      - ./db/sharding/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
+      - postgres_shard_0_data:/var/lib/postgresql/data
+
+  postgres_shard_0_replica:
+    <<: *postgres-base
+    container_name: postgres_shard_0_replica
+    ports:
+      - "5435:5432"
+    environment:
+      <<: *postgres-env
+      PGUSER: ${POSTGRES_USER}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+      PRIMARY: postgres_shard_0
+    volumes:
+      - ./db/sharding/init-replica.sh:/docker-entrypoint-initdb.d/init-replica.sh
+      - postgres_shard_0_replica_data:/var/lib/postgresql/data
+    depends_on:
+      postgres_shard_0:
+        condition: service_healthy
+
+  postgres_shard_1:
+    <<: *postgres-base
+    container_name: postgres_shard_1
+    ports:
+      - "5434:5432"
+    environment:
+      <<: *postgres-env
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+    volumes:
+      - ./db/sharding/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
+      - postgres_shard_1_data:/var/lib/postgresql/data
+
+  postgres_shard_1_replica:
+    <<: *postgres-base
+    container_name: postgres_shard_1_replica
+    ports:
+      - "5436:5432"
+    environment:
+      <<: *postgres-env
+      PGUSER: ${POSTGRES_USER}
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_REPLICATION_PASSWORD}
+      PRIMARY: postgres_shard_1
+    volumes:
+      - ./db/sharding/init-replica.sh:/docker-entrypoint-initdb.d/init-replica.sh
+      - postgres_shard_1_replica_data:/var/lib/postgresql/data
+    depends_on:
+      postgres_shard_1:
+        condition: service_healthy
 
   redis:
     image: redis:8.2
@@ -276,23 +352,59 @@ services:
       start_period: 60s
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
+    <<: *postgres-exporter
     container_name: postgres-exporter
     environment:
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB_NAME}?sslmode=disable"
     ports:
       - "9187:9187"
-    networks:
-      - backend
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9187/metrics" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+
+  postgres-exporter-shard-0:
+    <<: *postgres-exporter
+    container_name: postgres-exporter-shard-0
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shard_0:5432/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - "9188:9187"
+    depends_on:
+      postgres_shard_0:
+        condition: service_healthy
+
+  postgres-exporter-shard-1:
+    <<: *postgres-exporter
+    container_name: postgres-exporter-shard-1
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shard_1:5432/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - "9189:9187"
+    depends_on:
+      postgres_shard_1:
+        condition: service_healthy
+
+  postgres-exporter-shard-0-replica:
+    <<: *postgres-exporter
+    container_name: postgres-exporter-shard-0-replica
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shard_0_replica:5432/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - "9190:9187"
+    depends_on:
+      postgres_shard_0_replica:
+        condition: service_healthy
+
+  postgres-exporter-shard-1-replica:
+    <<: *postgres-exporter
+    container_name: postgres-exporter-shard-1-replica
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_shard_1_replica:5432/${POSTGRES_DB_NAME}?sslmode=disable"
+    ports:
+      - "9191:9187"
+    depends_on:
+      postgres_shard_1_replica:
+        condition: service_healthy
 
   kafka-exporter:
     image: danielqsj/kafka-exporter:latest
@@ -312,7 +424,34 @@ services:
       timeout: 10s
       retries: 5
 
-  # Application
+  # Artifactory
+  artifactory:
+    image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.59.9
+    container_name: artifactory
+    ports:
+      - "8001:8081"
+      - "8002:8082"
+    volumes:
+      - artifactory_data:/var/opt/jfrog/artifactory
+    environment:
+      JF_ROUTER_ENTRYPOINTS_EXTERNALPORT: 8082
+      JF_SHARED_DATABASE_TYPE: postgresql
+      JF_SHARED_DATABASE_DRIVER: org.postgresql.Driver
+      JF_SHARED_DATABASE_USERNAME: ${POSTGRES_USER}
+      JF_SHARED_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      JF_SHARED_DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_NAME}
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-sf", "http://localhost:8081/artifactory/api/system/ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Applications
   event-collector:
     image: event-collector:latest
     container_name: event-collector
@@ -320,6 +459,9 @@ services:
       - "8090:8090"
     build:
       context: ./../../event-collector
+      network: host
+      args:
+        ARTIFACTORY_HOST: artifactory:8081
     networks:
       - backend
     depends_on:
@@ -334,14 +476,79 @@ services:
       cassandra-load-keyspace:
         condition: service_completed_successfully
     environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
-      - CASSANDRA_CONTACT_POINTS=cassandra
-      - CASSANDRA_PORT=9042
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CASSANDRA_CONTACT_POINTS: cassandra
+      CASSANDRA_PORT: 9042
+
+  avro-schemas:
+    image: avro-schemas:latest
+    build:
+      context: ./../../avro-schemas
+      network: host
+      args:
+        ARTIFACTORY_HOST: artifactory:8081
+
+  device-collector:
+    image: device-collector:latest
+    container_name: device-collector
+    ports:
+      - "8091:8090"
+    build:
+      context: ./../../device-collector
+      network: host
+      args:
+        ARTIFACTORY_HOST: artifactory:8081
+    networks:
+      - backend
+    depends_on:
+      artifactory:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      schema-registry:
+        condition: service_started
+      postgres_shard_0:
+        condition: service_healthy
+      postgres_shard_0_replica:
+        condition: service_healthy
+      postgres_shard_1:
+        condition: service_healthy
+      postgres_shard_1_replica:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      # Shard 0
+      SHARD_0_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
+      SHARD_0_USER: ${POSTGRES_USER}
+      SHARD_0_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_0_CONNECTION_TIMEOUT: 30000
+      # Shard 0 replica
+      SHARD_0_REPLICA_JDBC_URL: jdbc:postgresql://postgres_shard_0_replica:5432/${POSTGRES_DB_NAME}
+      SHARD_0_REPLICA_USER: ${POSTGRES_USER}
+      SHARD_0_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_0_REPLICA_CONNECTION_TIMEOUT: 30000
+      # Shard 1
+      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
+      SHARD_1_USER: ${POSTGRES_USER}
+      SHARD_1_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_1_CONNECTION_TIMEOUT: 30000
+      # Shard 1 replica
+      SHARD_1_REPLICA_JDBC_URL: jdbc:postgresql://postgres_shard_1_replica:5432/${POSTGRES_DB_NAME}
+      SHARD_1_REPLICA_USER: ${POSTGRES_USER}
+      SHARD_1_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_1_REPLICA_CONNECTION_TIMEOUT: 30000
 
 volumes:
   postgres_data:
     name: ourcode-iot-postgres-data
+  postgres_shard_0_data:
+    name: ourcode-iot-postgres-data-shard-0
+  postgres_shard_1_data:
+    name: ourcode-iot-postgres-data-shard-1
   redis_insight_data:
     name: ourcode-iot-redis-insight-data
   cassandra_data:
@@ -350,6 +557,12 @@ volumes:
     name: ourcode-iot-minio-data
   grafana_data:
     name: ourcode-iot-grafana-data
+  postgres_shard_0_replica_data:
+    name: ourcode-iot-postgres-data-shard-0-replica
+  postgres_shard_1_replica_data:
+    name: ourcode-iot-postgres-data-shard-1-replica
+  artifactory_data:
+    name: ourcode-iot-artifactory-data
 
 networks:
   backend:

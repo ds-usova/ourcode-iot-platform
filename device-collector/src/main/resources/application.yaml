@@ -1,0 +1,85 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: device-collector
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
+    url: jdbc:shardingsphere:classpath:db/sharding.yaml?placeholder-type=environment
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    admin:
+      auto-create: false
+    consumer:
+      auto-offset-reset: latest
+      group-id: device-collector-group
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      backoff-interval: 1000
+      backoff-max-attempts: 5
+      concurrency: 1
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+        specific.avro.reader: true
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
+        heartbeat.interval.ms: 3000
+        max.poll.records: 100
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      retries: 5
+      retry-backoff-ms: 1000
+      acks: all
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8081}
+  retry:
+    device-gateway:
+      max-attempts: 3
+      backoff-delay: 500
+
+flyway:
+  locations: classpath:db/migrations
+  dataSources:
+    - name: shard_0
+      url: ${SHARD_0_JDBC_URL:jdbc:postgresql://localhost:5433/our_code_db}
+      username: ${SHARD_0_USER:our_code_user}
+      password: ${SHARD_0_PASSWORD:our_code_password}
+    - name: shard_1
+      url: ${SHARD_1_JDBC_URL:jdbc:postgresql://localhost:5434/our_code_db}
+      username: ${SHARD_1_USER:our_code_user}
+      password: ${SHARD_1_PASSWORD:our_code_password}
+
+app:
+  kafka:
+    topics:
+      devices: device-ids
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState, ping
+        readiness:
+          include: readinessState, shard, kafka

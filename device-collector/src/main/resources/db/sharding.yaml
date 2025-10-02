@@ -1,0 +1,79 @@
+databaseName: iot
+
+mode:
+  type: Standalone
+  repository:
+    type: File
+    props:
+      path: .shardingsphere
+
+dataSources:
+  shard_0_primary:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: $${SHARD_0_DRIVER::org.postgresql.Driver}
+    jdbcUrl: $${SHARD_0_JDBC_URL::jdbc:postgresql://localhost:5433/our_code_db}
+    username: $${SHARD_0_USER::our_code_user}
+    password: $${SHARD_0_PASSWORD::our_code_password}
+    connectionTimeout: $${SHARD_0_CONNECTION_TIMEOUT::30000}
+  shard_1_primary:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: $${SHARD_1_DRIVER::org.postgresql.Driver}
+    jdbcUrl: $${SHARD_1_JDBC_URL::jdbc:postgresql://localhost:5434/our_code_db}
+    username: $${SHARD_1_USER::our_code_user}
+    password: $${SHARD_1_PASSWORD::our_code_password}
+    connectionTimeout: $${SHARD_1_CONNECTION_TIMEOUT::30000}
+  shard_0_replica:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: $${SHARD_0_REPLICA_DRIVER::org.postgresql.Driver}
+    jdbcUrl: $${SHARD_0_REPLICA_JDBC_URL::jdbc:postgresql://localhost:5435/our_code_db}
+    username: $${SHARD_0_REPLICA_USER::our_code_user}
+    password: $${SHARD_0_REPLICA_PASSWORD::our_code_password}
+    connectionTimeout: $${SHARD_0_REPLICA_CONNECTION_TIMEOUT::30000}
+  shard_1_replica:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: $${SHARD_1_REPLICA_DRIVER::org.postgresql.Driver}
+    jdbcUrl: $${SHARD_1_REPLICA_JDBC_URL::jdbc:postgresql://localhost:5436/our_code_db}
+    username: $${SHARD_1_REPLICA_USER::our_code_user}
+    password: $${SHARD_1_REPLICA_PASSWORD::our_code_password}
+    connectionTimeout: $${SHARD_1_REPLICA_CONNECTION_TIMEOUT::30000}
+
+rules:
+  - !READWRITE_SPLITTING
+    dataSourceGroups:
+      shard_0:
+        writeDataSourceName: shard_0_primary
+        readDataSourceNames:
+          - shard_0_replica
+        loadBalancerName: round_robin
+      shard_1:
+        writeDataSourceName: shard_1_primary
+        readDataSourceNames:
+          - shard_1_replica
+        loadBalancerName: round_robin
+    loadBalancers:
+      round_robin:
+        type: ROUND_ROBIN
+
+  - !SHARDING
+    tables:
+      devices:
+        actualDataNodes: shard_${0..1}.devices
+        databaseStrategy:
+          standard:
+            shardingColumn: device_id
+            shardingAlgorithmName: deviceid_hash_mod
+    defaultDatabaseStrategy:
+      standard:
+        shardingColumn: device_id
+        shardingAlgorithmName: deviceid_hash_mod
+    defaultTableStrategy:
+      none:
+
+    shardingAlgorithms:
+      deviceid_hash_mod:
+        type: INLINE
+        props:
+          algorithm-expression: shard_${Math.abs(device_id.hashCode()) % 2}
+
+props:
+  sql-show: true

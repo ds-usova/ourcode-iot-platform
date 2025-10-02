@@ -1,0 +1,46 @@
+@startuml Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title "Container Diagram"
+
+' Styles
+UpdateElementStyle("container", $borderColor="#444444")
+UpdateElementStyle("external_container", $borderColor="#444444")
+
+AddRelTag("dashed", $lineStyle = DashedLine())
+
+System_Boundary(system, "Device collector") {
+
+    ' Containers
+    Container(device_collector, "Device Collector", "Spring Boot", "Collects devices")
+
+    Container(sharding_sphere, "Sharding Sphere JDBC", "Library", "Provides sharding and read/write splitting")
+
+    ContainerDb(device_db_shard_0, "Devices Database", "PostgreSQL", "Shard 0")
+    ContainerDb(device_db_shard_1, "Devices Database", "PostgreSQL", "Shard 1")
+    ContainerDb(device_db_replica_0, "Devices Database", "PostgreSQL", "Read only replica 0")
+    ContainerDb(device_db_replica_1, "Devices Database", "PostgreSQL", "Read only replica 1")
+
+    ContainerQueue(devices_topic, "Devices topic", "Apache Kafka")
+    ContainerQueue(devices_dlt_topic, "DLT Device topic", "Apache Kafka")
+
+}
+
+' External containers
+Container_Ext(event_collector, "Event Collector", "Collects events from devices")
+
+Rel_R(event_collector, devices_topic, "Sends devices")
+Rel_L(device_collector, devices_topic, "Reads devices")
+
+Rel_R(device_collector, devices_dlt_topic, "Writes devices that could not be processed")
+Rel_D(device_collector, sharding_sphere, "Writes devices")
+
+Rel_D(sharding_sphere, device_db_shard_0, "Writes devices")
+Rel_D(sharding_sphere, device_db_shard_1, "Writes devices")
+Rel_D(sharding_sphere, device_db_replica_0, "Reads devices")
+Rel_D(sharding_sphere, device_db_replica_1, "Reads devices")
+
+Rel_R(device_db_shard_0, device_db_replica_0, "Synchronous replication", $tags="dashed")
+Rel_L(device_db_shard_1, device_db_replica_1, "Synchronous replication", $tags="dashed")
+
+@enduml

@@ -1,0 +1,37 @@
+@startuml "Device Event Processing Flow"
+
+' Define styles
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+actor "Kafka Broker" as KafkaBroker
+participant "DeviceCollectorService" as DCS
+participant "AvroDeserializer" as AVRO
+
+participant "ShardingSphere JDBC" as SSJDBC
+database "Shard 1" as SHARD_1
+database "Shard 2" as SHARD_2
+
+KafkaBroker -> DCS: send device \n[Device, devices-ids]
+activate DCS
+
+DCS -> AVRO: deserialize Avro
+activate AVRO
+AVRO --> DCS: Device DTO
+deactivate AVRO
+
+DCS -> SSJDBC: upsert device
+activate SSJDBC
+SSJDBC -> SHARD_1: upsert based on deviceId
+SSJDBC -> SHARD_2: upsert based on deviceId
+deactivate SSJDBC
+
+SSJDBC --> DCS: upsert result
+
+alt Devices can't be saved
+    DCS --> KafkaBroker: publish to DLT \n[DeviceDeadLetter, device-ids-dlt]
+end
+
+deactivate DCS
+
+@enduml
