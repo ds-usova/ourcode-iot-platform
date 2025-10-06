@@ -1,0 +1,197 @@
+openapi: 3.1.0
+info:
+  title: Device Service API
+  description: |-
+    This is a basic CRUD API to manage devices.
+  version: 1.0.0
+tags:
+  - name: device
+paths:
+  /device:
+    post:
+      tags:
+        - device
+      summary: Add a new device.
+      description: Add a new device.
+      operationId: addDevice
+      requestBody:
+        description: Create a new device
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /device/{deviceId}:
+    get:
+      tags:
+        - device
+      summary: Find device by ID.
+      description: Returns a single device.
+      operationId: getDeviceById
+      parameters:
+        - name: deviceId
+          in: path
+          description: ID of device to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - device
+      summary: Updates a device
+      description: Updates a device.
+      operationId: updateDevice
+      parameters:
+        - name: deviceId
+          in: path
+          description: ID of device that needs to be updated
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: type
+          in: query
+          description: New type of the device
+          schema:
+            type: string
+            minLength: 1
+            example: sensor
+        - name: meta
+          in: query
+          description: New meta information of the device in JSON format
+          schema:
+            type: object
+            additionalProperties: true
+            example: { "temp": "25" }
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid input
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - device
+      summary: Deletes a device.
+      description: Delete a device.
+      operationId: deleteDevice
+      parameters:
+        - name: deviceId
+          in: path
+          description: Device id to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Device deleted
+        '404':
+          description: Device doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    DeviceUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          minLength: 1
+          example: sensor
+        meta:
+          type: object
+          additionalProperties: true
+          example: { "temp": "25" }
+    Device:
+      required:
+        - type
+        - meta
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        type:
+          type: string
+          minLength: 1
+          example: sensor
+        meta:
+          type: object
+          additionalProperties: true
+          example: { "temp": "25" }
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Unique error code to identify the error
+          example: 25575e97-3624-4577-9258-1b708663a93a
+        message:
+          type: string
+          description: A human-readable message providing more details about the error
+          example: Device not found
+      required:
+        - code
+        - message
