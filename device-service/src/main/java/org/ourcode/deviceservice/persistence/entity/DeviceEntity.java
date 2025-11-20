@@ -1,5 +1,6 @@
 package org.ourcode.deviceservice.persistence.entity;
 
+import org.ourcode.deviceservice.api.model.Device;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -50,6 +51,10 @@ public class DeviceEntity {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public Device toModel() {
+        return new Device(id, type, createdAt, metadata);
     }
 
 }

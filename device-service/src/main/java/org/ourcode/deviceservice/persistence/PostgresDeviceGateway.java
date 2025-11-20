@@ -5,6 +5,8 @@ import org.ourcode.deviceservice.api.exception.DuplicateException;
 import org.ourcode.deviceservice.api.gateway.DeviceGateway;
 import org.ourcode.deviceservice.api.model.Device;
 import org.ourcode.deviceservice.persistence.configuration.TranslatePersistenceExceptions;
+import org.ourcode.deviceservice.persistence.entity.DeviceEntity;
+import org.ourcode.deviceservice.persistence.repository.DeviceRepository;
 import org.ourcode.deviceservice.util.TimeUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -23,9 +26,11 @@ import java.util.List;
 public class PostgresDeviceGateway implements DeviceGateway {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final DeviceRepository deviceRepository;
 
-    public PostgresDeviceGateway(NamedParameterJdbcTemplate jdbcTemplate) {
+    public PostgresDeviceGateway(NamedParameterJdbcTemplate jdbcTemplate, DeviceRepository deviceRepository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.deviceRepository = deviceRepository;
     }
 
     @Override
@@ -51,7 +56,7 @@ public class PostgresDeviceGateway implements DeviceGateway {
                 .addValue("createdAt", TimeUtils.now())
                 .addValue("metadata", device.metadata());
 
-        List<Device> results = jdbcTemplate.query(sql, params, (rs, rowNum) ->
+        List<Device> results = jdbcTemplate.query(sql, params, (rs, _) ->
                 new Device(
                         rs.getString("device_id"),
                         rs.getString("device_type"),
@@ -65,6 +70,13 @@ public class PostgresDeviceGateway implements DeviceGateway {
         }
 
         return results.getFirst();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Device> getBy(String deviceId) {
+        log.debug("Getting device with ID {}", deviceId);
+        return deviceRepository.findById(deviceId).map(DeviceEntity::toModel);
     }
 
 }

@@ -1,6 +1,7 @@
 package org.ourcode.deviceservice.rest;
 
 import lombok.extern.slf4j.Slf4j;
+import org.ourcode.deviceservice.api.exception.BadRequestException;
 import org.ourcode.deviceservice.api.service.DeviceService;
 import org.ourcode.rest.api.DeviceApi;
 import org.ourcode.rest.model.Device;
@@ -21,6 +22,14 @@ public class DeviceController implements DeviceApi {
 
     @Override
     public ResponseEntity<Device> addDevice(Device device) {
+        if (device.getId().isBlank()) {
+            throw new BadRequestException("Validation failed: id must not be blank");
+        }
+
+        if (device.getType().isBlank()) {
+            throw new BadRequestException("Validation failed: type must not be blank");
+        }
+
         log.debug("Adding device {}", device);
         var created = deviceService.addDevice( toApiModel(device) );
 
@@ -29,17 +38,20 @@ public class DeviceController implements DeviceApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteDevice(Long deviceId) {
+    public ResponseEntity<Void> deleteDevice(String deviceId) {
         return ResponseEntity.notFound().build();
     }
 
     @Override
-    public ResponseEntity<Device> getDeviceById(Long deviceId) {
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Device> getDeviceById(String deviceId) {
+        log.debug("Getting device by ID {}", deviceId);
+        var device = deviceService.getDevice(deviceId);
+
+        return ResponseEntity.ok( toRestModel(device) );
     }
 
     @Override
-    public ResponseEntity<Device> updateDevice(Long deviceId, String type, String meta) {
+    public ResponseEntity<Device> updateDevice(String deviceId, String type, String meta) {
         return ResponseEntity.notFound().build();
     }
 

@@ -14,4 +14,12 @@ public interface DeviceService {
      */
     Device addDevice(Device device);
 
+    /**
+     * Finds a device by its ID.
+     * @param deviceId The ID of the device to be retrieved.
+     * @return The device with the specified ID.
+     * @throws org.ourcode.deviceservice.api.exception.NotFoundException if no device with the given ID exists
+     */
+    Device getDevice(String deviceId);
+
 }

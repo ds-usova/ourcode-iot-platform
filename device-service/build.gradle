@@ -133,10 +133,19 @@ jacoco {
 
 jacocoTestReport {
     dependsOn test
+
     reports {
         xml.required = false
         csv.required = false
         html.required = true
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                "**/org/ourcode/rest/**",
+            ])
+        }))
     }
 }
 
@@ -147,6 +156,14 @@ jacocoTestCoverageVerification {
                 minimum = 0.90
             }
         }
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "**/org/ourcode/rest/**",
+            ])
+        }))
     }
 }
 

@@ -30,10 +30,17 @@ public class AddDeviceTest extends AbstractIntegrationTest {
     @Nested
     class ValidationTests {
 
-        @ParameterizedTest(name = "{1}")
+        @ParameterizedTest(name = "{1} ({0})")
         @DisplayName("Validation tests for adding device")
         @CsvSource({
+            "json/system_test/device/add/empty_id_400.json, id size must be between 1 and 255",
+            "json/system_test/device/add/long_id_400.json, id size must be between 1 and 255",
+            "json/system_test/device/add/blank_id_400.json, id must not be blank",
             "json/system_test/device/add/missing_id_400.json, id must not be null",
+
+            "json/system_test/device/add/empty_type_400.json, type size must be between 1 and 255",
+            "json/system_test/device/add/long_type_400.json, type size must be between 1 and 255",
+            "json/system_test/device/add/blank_type_400.json, type must not be blank",
             "json/system_test/device/add/missing_type_400.json, type must not be null",
         })
         void testValidation(String path, String message) {

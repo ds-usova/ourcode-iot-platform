@@ -1,5 +1,6 @@
 package org.ourcode.deviceservice.application;
 
+import org.ourcode.deviceservice.api.exception.NotFoundException;
 import org.ourcode.deviceservice.api.gateway.DeviceGateway;
 import org.ourcode.deviceservice.api.model.Device;
 import org.ourcode.deviceservice.api.service.DeviceService;
@@ -17,6 +18,12 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     public Device addDevice(Device device) {
         return deviceGateway.create(device);
+    }
+
+    @Override
+    public Device getDevice(String deviceId) {
+        return deviceGateway.getBy(deviceId)
+                .orElseThrow(() -> new NotFoundException("Device with ID " + deviceId + " not found"));
     }
 
 }

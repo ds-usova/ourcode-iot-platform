@@ -60,8 +60,9 @@ paths:
           description: ID of device to return
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            minLength: 1
+            maxLength: 255
       responses:
         '200':
           description: successful operation
@@ -94,14 +95,16 @@ paths:
           description: ID of device that needs to be updated
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            minLength: 1
+            maxLength: 255
         - name: type
           in: query
           description: New type of the device
           schema:
             type: string
             minLength: 1
+            maxLength: 255
             example: sensor
         - name: meta
           in: query
@@ -137,8 +140,9 @@ paths:
           description: Device id to delete
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            minLength: 1
+            maxLength: 255
       responses:
         '200':
           description: Device deleted
@@ -163,6 +167,7 @@ components:
         type:
           type: string
           minLength: 1
+          maxLength: 255
           example: sensor
         meta:
           type: string
@@ -176,9 +181,12 @@ components:
         id:
           type: string
           minLength: 1
+          maxLength: 255
+          example: device123
         type:
           type: string
           minLength: 1
+          maxLength: 255
           example: sensor
         meta:
           type: string
