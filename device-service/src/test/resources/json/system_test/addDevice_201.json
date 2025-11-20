@@ -1,0 +1,5 @@
+{
+  "id": "device_1",
+  "type": "sensor",
+  "meta": "{\"temp\": \"22C\", \"humidity\": \"45%\"}"
+}

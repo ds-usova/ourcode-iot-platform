@@ -14,4 +14,14 @@ public interface DeviceGateway {
      */
     void upsertAll(List<Device> devices);
 
+    /**
+     * Creates a new device.
+     *
+     * @param device the device to create
+     * @return the created device
+     * @throws org.ourcode.deviceservice.api.exception.DuplicateException   if the device already exists
+     * @throws org.ourcode.deviceservice.api.exception.PersistenceException if the device cannot be created
+     */
+    Device create(Device device);
+
 }

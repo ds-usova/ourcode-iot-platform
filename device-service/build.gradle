@@ -79,6 +79,9 @@ dependencies {
     testImplementation "org.testcontainers:toxiproxy"
     testImplementation "org.testcontainers:postgresql"
 
+    testImplementation "io.rest-assured:rest-assured:${restAssuredVersion}"
+    testImplementation "io.rest-assured:json-path:${restAssuredVersion}"
+
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
@@ -86,8 +89,8 @@ openApiGenerate {
     generatorName.set("spring")
     inputSpec.set(file("src/main/resources/interface/device-service.yaml").toURI().toString())
 
-    modelPackage.set("org.ourcode.device.model")
-    apiPackage.set("org.ourcode.device.api")
+    modelPackage.set("org.ourcode.rest.model")
+    apiPackage.set("org.ourcode.rest.api")
 
     generateApiDocumentation.set(false)
     generateApiTests.set(false)
