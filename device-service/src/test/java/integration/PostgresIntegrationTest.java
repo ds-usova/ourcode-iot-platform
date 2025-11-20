@@ -83,4 +83,49 @@ public class PostgresIntegrationTest extends AbstractIntegrationTest {
 
     }
 
+    @Nested
+    public class TestGetDeviceById {
+
+        @Test
+        @DisplayName("happy path - device is retrieved successfully")
+        void testGetDeviceById() {
+            // Given: device is already saved
+            Device device = new Device(
+                    "device-123",
+                    "sensor",
+                    null,
+                    "{\"location\":\"warehouse-1\",\"status\":\"active\"}"
+            );
+
+            deviceGateway.create(device);
+            assertThat(deviceRepository.findById(device.id()))
+                    .withFailMessage("device must exist in DB before test")
+                    .isNotEmpty();
+
+            // When: retrieving the device by ID
+            Device retrievedDevice = deviceGateway.getBy(device.id()).orElseThrow(
+                    () -> new IllegalStateException("Device not found in DB")
+            );
+
+            // Then: retrieved device matches saved device
+            assertThat(retrievedDevice).isNotNull();
+            assertThat(retrievedDevice.id()).isEqualTo(device.id());
+            assertThat(retrievedDevice.type()).isEqualTo(device.type());
+            assertThat(retrievedDevice.metadata()).isEqualTo(device.metadata());
+        }
+
+        @Test
+        @DisplayName("when device does not exist - then empty Optional is returned")
+        void testGetDeviceById_deviceDoesNotExist() {
+            // Given: no device is saved yet
+            String nonExistentDeviceId = "non-existent-device-456";
+
+            // When & Then: retrieving the device by ID returns empty Optional
+            assertThat(deviceGateway.getBy(nonExistentDeviceId))
+                    .withFailMessage("device must not exist")
+                    .isEmpty();
+        }
+
+    }
+
 }
