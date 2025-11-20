@@ -9,7 +9,8 @@ public interface DeviceService {
      *
      * @param device The device to be added.
      * @return The added device.
-     * @throws org.ourcode.deviceservice.api.exception.DuplicateException if a device with the same id already exists.
+     * @throws org.ourcode.deviceservice.api.exception.DuplicateException if a device with the same id already exists
+     * @throws org.ourcode.deviceservice.api.exception.PersistenceException if an error occurs and the device cannot be persisted
      */
     Device addDevice(Device device);
 

@@ -171,7 +171,6 @@ components:
       required:
         - id
         - type
-        - meta
       type: object
       properties:
         id:

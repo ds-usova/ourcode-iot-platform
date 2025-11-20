@@ -34,8 +34,8 @@ public class ShardingIntegrationTest extends AbstractIntegrationTest {
         Device device2 = deviceWithId("device-2");
 
         // When: saving the devices
-        deviceGateway.upsertAll(List.of(device1));
-        deviceGateway.upsertAll(List.of(device2));
+        deviceGateway.create(device1);
+        deviceGateway.create(device2);
 
         // Then: each shard should contain one device
         int countInShard0 = shard0JdbcTemplate.queryForObject("SELECT COUNT(*) FROM devices WHERE device_id = ?", Integer.class, device1.id());

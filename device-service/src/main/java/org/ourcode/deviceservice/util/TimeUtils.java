@@ -5,7 +5,7 @@ import java.time.ZonedDateTime;
 
 public class TimeUtils {
 
-    private static ZoneId ZONE_ID = ZoneId.of("UTC");
+    private static final ZoneId ZONE_ID = ZoneId.of("UTC");
 
     private TimeUtils() {
         // Utility class
