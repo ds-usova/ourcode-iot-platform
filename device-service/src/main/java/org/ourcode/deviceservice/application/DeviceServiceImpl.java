@@ -26,4 +26,10 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new NotFoundException("Device with ID " + deviceId + " not found"));
     }
 
+    @Override
+    public Device updateDevice(String deviceId, String type, String meta) {
+        return deviceGateway.update(deviceId, type, meta)
+                .orElseThrow(() -> new NotFoundException("Device with ID " + deviceId + " not found"));
+    }
+
 }

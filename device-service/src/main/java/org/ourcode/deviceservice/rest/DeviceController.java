@@ -5,6 +5,7 @@ import org.ourcode.deviceservice.api.exception.BadRequestException;
 import org.ourcode.deviceservice.api.service.DeviceService;
 import org.ourcode.rest.api.DeviceApi;
 import org.ourcode.rest.model.Device;
+import org.ourcode.rest.model.DeviceUpdate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,8 +52,14 @@ public class DeviceController implements DeviceApi {
     }
 
     @Override
-    public ResponseEntity<Device> updateDevice(String deviceId, String type, String meta) {
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Device> updateDevice(String deviceId, DeviceUpdate deviceUpdate) {
+        if (deviceUpdate.getMeta() == null && deviceUpdate.getType().isBlank()) {
+            throw new BadRequestException("Validation failed: type must not be blank");
+        }
+
+        log.debug("Updating device by ID {}", deviceId);
+        Device updated = toRestModel( deviceService.updateDevice(deviceId, deviceUpdate.getType(), deviceUpdate.getMeta()) );
+        return ResponseEntity.ok(updated);
     }
 
 }

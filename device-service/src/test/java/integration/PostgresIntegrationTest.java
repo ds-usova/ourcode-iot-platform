@@ -128,4 +128,119 @@ public class PostgresIntegrationTest extends AbstractIntegrationTest {
 
     }
 
+    @Nested
+    public class TestUpdateDevice {
+
+        private final Device device = new Device(
+                "device-123",
+                "sensor",
+                null,
+                "{\"location\":\"warehouse-1\",\"status\":\"active\"}"
+        );
+
+        private void fulfillPreconditions() {
+            deviceGateway.create(device);
+
+            assertThat(deviceRepository.findById(device.id()))
+                    .withFailMessage("device must exist in DB before test")
+                    .isNotEmpty();
+        }
+
+        @Test
+        @DisplayName("happy path - device is updated successfully")
+        void testUpdateDevice() {
+            // Given: device is already saved
+            Device device = new Device(
+                    "device-123",
+                    "sensor",
+                    null,
+                    "{\"location\":\"warehouse-1\",\"status\":\"active\"}"
+            );
+
+            deviceGateway.create(device);
+            assertThat(deviceRepository.findById(device.id()))
+                    .withFailMessage("device must exist in DB before test")
+                    .isNotEmpty();
+
+            // When: updating the device
+            String newType = "actuator";
+            String newMetadata = "{\"location\":\"warehouse-2\",\"status\":\"inactive\"}";
+            Device updatedDevice = deviceGateway.update(device.id(), newType, newMetadata)
+                                                .orElseThrow(() -> new IllegalStateException("Device not found in DB"));
+
+            // Then: updated device matches new values
+            assertThat(updatedDevice).isNotNull();
+            assertThat(updatedDevice.id()).isEqualTo(device.id());
+            assertThat(updatedDevice.type()).isEqualTo(newType);
+            assertThat(updatedDevice.metadata()).isEqualTo(newMetadata);
+
+            // Then: database entity matches new values
+            Device entityFromDb = deviceGateway.getBy(device.id())
+                                            .orElseThrow(() -> new IllegalStateException("Device not found in DB"));
+            assertThat(entityFromDb.type()).isEqualTo(newType);
+            assertThat(entityFromDb.metadata()).isEqualTo(newMetadata);
+        }
+
+        @Test
+        @DisplayName("happy path - updating metadata only")
+        void testUpdateDevice_metadataOnly() {
+            // Given: device is already saved
+           fulfillPreconditions();
+
+            // When: updating only the metadata
+            String newMetadata = "{\"location\":\"warehouse-3\",\"status\":\"active\"}";
+            Device updatedDevice = deviceGateway.update(device.id(), null, newMetadata)
+                                                .orElseThrow(() -> new IllegalStateException("Device not found in DB"));
+
+            // Then: updated device matches new metadata and old type
+            assertThat(updatedDevice).isNotNull();
+            assertThat(updatedDevice.id()).isEqualTo(device.id());
+            assertThat(updatedDevice.type()).isEqualTo(device.type());
+            assertThat(updatedDevice.metadata()).isEqualTo(newMetadata);
+
+            // Then: database entity matches new metadata and old type
+            Device entityFromDb = deviceGateway.getBy(device.id())
+                                            .orElseThrow(() -> new IllegalStateException("Device not found in DB"));
+            assertThat(entityFromDb.type()).isEqualTo(device.type());
+            assertThat(entityFromDb.metadata()).isEqualTo(newMetadata);
+        }
+
+        @Test
+        @DisplayName("happy path - updating type only")
+        void testUpdateDevice_typeOnly() {
+            // Given: device is already saved
+            fulfillPreconditions();
+
+            // When: updating only the type
+            String newType = "gateway";
+            Device updatedDevice = deviceGateway.update(device.id(), newType, null)
+                                                .orElseThrow(() -> new IllegalStateException("Device not found in DB"));
+
+            // Then: updated device matches new type and old metadata
+            assertThat(updatedDevice).isNotNull();
+            assertThat(updatedDevice.id()).isEqualTo(device.id());
+            assertThat(updatedDevice.type()).isEqualTo(newType);
+            assertThat(updatedDevice.metadata()).isEqualTo(device.metadata());
+
+            // Then: database entity matches new type and old metadata
+            Device entityFromDb = deviceGateway.getBy(device.id())
+                                            .orElseThrow(() -> new IllegalStateException("Device not found in DB"));
+            assertThat(entityFromDb.type()).isEqualTo(newType);
+            assertThat(entityFromDb.metadata()).isEqualTo(device.metadata());
+        }
+
+        @Test
+        @DisplayName("when device does not exist - then empty Optional is returned")
+        void testUpdateDevice_deviceDoesNotExist() {
+            // Given: no device is saved yet
+            String nonExistentDeviceId = "non-existent-device-456";
+
+            // When & Then: updating the device returns empty Optional
+            assertThat(deviceGateway.update(nonExistentDeviceId, "new-type", "new-metadata"))
+                    .withFailMessage("device must not exist")
+                    .isEmpty();
+        }
+
+    }
+
 }

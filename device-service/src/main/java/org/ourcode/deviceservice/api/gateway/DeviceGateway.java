@@ -21,7 +21,18 @@ public interface DeviceGateway {
      *
      * @param deviceId the ID of the device to retrieve
      * @return an Optional containing the device if found, or empty if not found
+     * @throws org.ourcode.deviceservice.api.exception.PersistenceException if the device cannot be retrieved
      */
     Optional<Device> getBy(String deviceId);
+
+    /**
+     * Updates an existing device.
+     * @param deviceId the ID of the device to update
+     * @param type the new type of the device, or null if not updating
+     * @param meta the new metadata of the device, or null if not updating
+     * @return an Optional containing the updated device if found, or empty if not found
+     * @throws org.ourcode.deviceservice.api.exception.PersistenceException if the device cannot be updated
+     */
+    Optional<Device> update(String deviceId, String type, String meta);
 
 }
