@@ -35,4 +35,12 @@ public interface DeviceService {
      */
     Device updateDevice(String deviceId, String type, String meta);
 
+    /**
+     * Deletes a device by its ID.
+     * @param deviceId The ID of the device to be deleted.
+     * @throws org.ourcode.deviceservice.api.exception.NotFoundException if no device with the given ID exists
+     * @throws org.ourcode.deviceservice.api.exception.PersistenceException if an error occurs and the device cannot be deleted
+     */
+    void deleteDevice(String deviceId);
+
 }

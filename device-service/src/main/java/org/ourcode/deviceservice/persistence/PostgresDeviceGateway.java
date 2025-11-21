@@ -56,4 +56,11 @@ public class PostgresDeviceGateway implements DeviceGateway {
         return deviceRepository.updateDevice(deviceId, type, meta).map(DeviceEntity::toModel);
     }
 
+    @Override
+    @Transactional
+    public boolean delete(String deviceId) {
+        log.debug("Deleting device with ID {}", deviceId);
+        return deviceRepository.deleteBy(deviceId) == 1;
+    }
+
 }

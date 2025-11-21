@@ -243,4 +243,48 @@ public class PostgresIntegrationTest extends AbstractIntegrationTest {
 
     }
 
+    @Nested
+    public class TestDeleteDevice {
+
+        @Test
+        @DisplayName("happy path - device is deleted successfully")
+        void testDeleteDevice() {
+            // Given: device is already saved
+            Device device = new Device(
+                    "device-123",
+                    "sensor",
+                    null,
+                    "{\"location\":\"warehouse-1\",\"status\":\"active\"}"
+            );
+
+            deviceGateway.create(device);
+            assertThat(deviceRepository.findById(device.id()))
+                    .withFailMessage("device must exist in DB before test")
+                    .isNotEmpty();
+
+            // When: deleting the device
+            boolean deleted = deviceGateway.delete(device.id());
+
+            // Then: device no longer exists in the database
+            assertThat(deleted).isTrue();
+            assertThat(deviceRepository.findById(device.id()))
+                    .withFailMessage("device must be deleted from DB")
+                    .isEmpty();
+        }
+
+        @Test
+        @DisplayName("when device does not exist - then delete returns false")
+        void testDeleteDevice_deviceDoesNotExist() {
+            // Given: no device is saved yet
+            String nonExistentDeviceId = "non-existent-device-456";
+
+            // When: deleting the device
+            boolean deleted = deviceGateway.delete(nonExistentDeviceId);
+
+            // Then: delete returns false
+            assertThat(deleted).isFalse();
+        }
+
+    }
+
 }

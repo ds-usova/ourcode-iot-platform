@@ -32,4 +32,12 @@ public class DeviceServiceImpl implements DeviceService {
                 .orElseThrow(() -> new NotFoundException("Device with ID " + deviceId + " not found"));
     }
 
+    @Override
+    public void deleteDevice(String deviceId) {
+        boolean deleted = deviceGateway.delete(deviceId);
+        if (!deleted) {
+            throw new NotFoundException("Device with ID " + deviceId + " not found");
+        }
+    }
+
 }

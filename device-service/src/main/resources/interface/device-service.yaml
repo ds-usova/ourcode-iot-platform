@@ -146,7 +146,7 @@ paths:
             minLength: 1
             maxLength: 255
       responses:
-        '200':
+        '204':
           description: Device deleted
         '404':
           description: Device doesn't exist

@@ -40,7 +40,10 @@ public class DeviceController implements DeviceApi {
 
     @Override
     public ResponseEntity<Void> deleteDevice(String deviceId) {
-        return ResponseEntity.notFound().build();
+        log.debug("Deleting device by ID {}", deviceId);
+
+        deviceService.deleteDevice(deviceId);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

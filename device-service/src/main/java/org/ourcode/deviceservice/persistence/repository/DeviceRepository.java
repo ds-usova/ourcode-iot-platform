@@ -1,6 +1,7 @@
 package org.ourcode.deviceservice.persistence.repository;
 
 import org.ourcode.deviceservice.persistence.entity.DeviceEntity;
+import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -29,5 +30,9 @@ public interface DeviceRepository extends CrudRepository<DeviceEntity, String> {
         RETURNING device_id, device_type, created_at, meta
     """)
     Optional<DeviceEntity> updateDevice(String deviceId, String deviceType, String metadata);
+
+    @Modifying
+    @Query("DELETE FROM devices WHERE device_id = :id")
+    int deleteBy(String id);
 
 }

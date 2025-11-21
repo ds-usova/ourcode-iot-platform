@@ -35,4 +35,13 @@ public interface DeviceGateway {
      */
     Optional<Device> update(String deviceId, String type, String meta);
 
+    /**
+     * Deletes a device by its ID.
+     * @param deviceId the ID of the device to delete
+     * @return true if the device was deleted, false otherwise
+     * @throws org.ourcode.deviceservice.api.exception.NotFoundException if the device does not exist
+     * @throws org.ourcode.deviceservice.api.exception.PersistenceException if the device cannot be deleted
+     */
+    boolean delete(String deviceId);
+
 }
