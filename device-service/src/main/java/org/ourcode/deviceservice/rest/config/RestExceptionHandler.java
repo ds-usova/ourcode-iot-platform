@@ -1,4 +1,4 @@
-package org.ourcode.deviceservice.rest;
+package org.ourcode.deviceservice.rest.config;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +13,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -106,6 +107,18 @@ public class RestExceptionHandler {
         error.setMessage("Validation failed: " + invalidFields);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Error> handleNoResourceFound(NoResourceFoundException ex) {
+        String code = UUID.randomUUID().toString();
+        log.debug("Resource not found {}: {}", code, ex.getMessage(), ex);
+
+        Error error = new Error();
+        error.setCode(code);
+        error.setMessage("Resource %s not found".formatted(ex.getResourcePath()));
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     // Server errors (5xx)

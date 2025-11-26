@@ -42,6 +42,9 @@ dependencies {
     // Web
     implementation "org.springframework.boot:spring-boot-starter-web"
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-oauth2-resource-server'
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
 
     // Todo: is it required?
     implementation "io.swagger.core.v3:swagger-annotations:2.2.15"
@@ -78,6 +81,7 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter"
     testImplementation "org.testcontainers:toxiproxy"
     testImplementation "org.testcontainers:postgresql"
+    testImplementation "com.github.dasniko:testcontainers-keycloak:${testcontainersKeycloakVersion}"
 
     testImplementation "io.rest-assured:rest-assured:${restAssuredVersion}"
     testImplementation "io.rest-assured:json-path:${restAssuredVersion}"

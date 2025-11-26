@@ -1,5 +1,6 @@
 package common;
 
+import common.containers.KeycloakContainer;
 import common.containers.PostgresContainers;
 import common.containers.ToxiproxyContainer;
 import jakarta.annotation.PostConstruct;
@@ -36,6 +37,8 @@ public abstract class AbstractIntegrationTest {
 
         log.info("Postgres 0 is running: {}", PostgresContainers.CONTAINER_0.isRunning());
         log.info("Postgres 1 is running: {}", PostgresContainers.CONTAINER_1.isRunning());
+
+        log.info("Keycloak is running: {}", KeycloakContainer.KEYCLOAK_CONTAINER.isRunning());
     }
 
     protected static void setProperties(DynamicPropertyRegistry registry) {

@@ -6,6 +6,10 @@ info:
   version: 1.0.0
 tags:
   - name: Device
+
+security:
+  - bearerAuth: []
+
 paths:
   /device:
     post:
@@ -207,3 +211,8 @@ components:
       required:
         - code
         - message
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

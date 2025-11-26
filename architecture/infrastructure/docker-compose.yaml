@@ -39,7 +39,7 @@ services:
       - "5432:5432"
     environment:
       <<: *postgres-env
-      # Keycloack database configuration
+      # Keycloak database configuration
       KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       KEYCLOAK_DB_SCHEMA: ${KEYCLOAK_DB_SCHEMA}

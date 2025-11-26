@@ -111,7 +111,7 @@ public class AddDeviceTest extends AbstractIntegrationTest {
 
         @Test
         @DisplayName("when device with given id already exists - then return 409")
-        void testAddDeviceThatIsAlreadyExist() {
+        void testAddDeviceThatAlreadyExists() {
             given()
                     .port(port)
                     .contentType("application/json")

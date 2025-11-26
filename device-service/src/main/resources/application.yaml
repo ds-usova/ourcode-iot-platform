@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: device-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${ISSUER_URI:http://localhost:8083/realms/our-code}
   threads:
     virtual:
       enabled: true
@@ -16,6 +21,9 @@ spring:
     device-gateway:
       max-attempts: 3
       backoff-delay: 500
+
+app:
+  apiProtected: ${DEVICE_SERVICE_API_PROTECTED:true}
 
 flyway:
   locations: classpath:db/migrations

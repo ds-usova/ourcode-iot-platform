@@ -45,7 +45,7 @@ public class DeleteDeviceTest extends AbstractIntegrationTest {
     class ValidationTests {
 
         @Test
-        @DisplayName("when get device with long id - then return 400")
+        @DisplayName("when delete device with long id - then return 400")
         void testLongDeviceId() {
             String id = "a".repeat(256);
             Response response = given()

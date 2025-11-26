@@ -84,8 +84,8 @@ public class GetDeviceTest extends AbstractIntegrationTest {
         }
 
         @Test
-        @DisplayName("when no device exist - then return 404")
-        void testAddDeviceWithoutRequiredFields() {
+        @DisplayName("when device doesn't exist - then return 404")
+        void testGetDevice_whenDeviceDoesntExist() {
             Response response = given()
                     .port(port)
                     .contentType("application/json")
@@ -107,7 +107,7 @@ public class GetDeviceTest extends AbstractIntegrationTest {
 
         @Test
         @DisplayName("when database is down - then return 500")
-        void testAddDeviceWhenDatabaseIsDown() throws IOException {
+        void testGetDeviceWhenDatabaseIsDown() throws IOException {
             fulfillPreconditions();
 
             ToxiProxyUtils.cutConnection(PROXY_0);

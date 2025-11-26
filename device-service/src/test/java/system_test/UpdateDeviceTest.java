@@ -133,7 +133,7 @@ public class UpdateDeviceTest extends AbstractIntegrationTest {
 
         @Test
         @DisplayName("when update device type - then return 200 with device")
-        void testAddDeviceWithoutRequiredFields() {
+        void testUpdateDeviceTypeOnly() {
             fulfillPreconditions();
 
             Response response = given()
@@ -180,7 +180,7 @@ public class UpdateDeviceTest extends AbstractIntegrationTest {
 
         @Test
         @DisplayName("when database is down - then return 500")
-        void testAddDeviceWhenDatabaseIsDown() throws IOException {
+        void testUpdateDeviceWhenDatabaseIsDown() throws IOException {
             ToxiProxyUtils.cutConnection(PROXY_0);
             ToxiProxyUtils.cutConnection(PROXY_1);
 
