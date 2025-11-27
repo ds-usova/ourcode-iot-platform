@@ -10,6 +10,7 @@ import org.ourcode.rest.model.Error;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -117,6 +118,18 @@ public class RestExceptionHandler {
         Error error = new Error();
         error.setCode(code);
         error.setMessage("Resource %s not found".formatted(ex.getResourcePath()));
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Error> handleNoResourceFound(HttpMediaTypeNotAcceptableException ex) {
+        String code = UUID.randomUUID().toString();
+        log.debug("Not acceptable media type {}: {}", code, ex.getMessage(), ex);
+
+        Error error = new Error();
+        error.setCode(code);
+        error.setMessage("Not acceptable media type");
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
