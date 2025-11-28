@@ -11,6 +11,8 @@ import java.util.stream.Stream;
 
 public class PostgresContainers {
 
+    private static final String POSTGRES_IMAGE = "postgres:17.5";
+
     public static final org.testcontainers.containers.PostgreSQLContainer<?> CONTAINER_0;
     public static final org.testcontainers.containers.PostgreSQLContainer<?> CONTAINER_1;
 
@@ -18,7 +20,7 @@ public class PostgresContainers {
     public static Proxy PROXY_1;
 
     static {
-        CONTAINER_0 = new PostgreSQLContainer<>("postgres:17.5")
+        CONTAINER_0 = new PostgreSQLContainer<>(POSTGRES_IMAGE)
                 .withNetwork(Network.NETWORK)
                 .withNetworkAliases("shard_0")
                 .withDatabaseName("our_code_db")
@@ -26,7 +28,7 @@ public class PostgresContainers {
                 .withPassword("test")
                 .waitingFor(Wait.forListeningPort());
 
-        CONTAINER_1 = new PostgreSQLContainer<>("postgres:17.5")
+        CONTAINER_1 = new PostgreSQLContainer<>(POSTGRES_IMAGE)
                 .withNetwork(Network.NETWORK)
                 .withNetworkAliases("shard_1")
                 .withDatabaseName("our_code_db")

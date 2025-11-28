@@ -23,7 +23,8 @@ import static common.JsonUtils.readJsonResourceAsString;
 import static common.containers.PostgresContainers.PROXY_0;
 import static common.containers.PostgresContainers.PROXY_1;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 @Slf4j
 public class UpdateDeviceTest extends AbstractIntegrationTest {

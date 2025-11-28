@@ -16,6 +16,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlConfig;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Slf4j
@@ -26,7 +27,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Sql(scripts = "/cleanup.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+@Sql(scripts = "/cleanup.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD, config = @SqlConfig(transactionMode = SqlConfig.TransactionMode.ISOLATED))
 public abstract class AbstractIntegrationTest {
 
     @LocalServerPort
@@ -57,13 +58,15 @@ public abstract class AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // no op - in case we need to add something later
+        PostgresContainers.resetProxies();
+        KeycloakContainer.restoreConnection();
     }
 
     @AfterEach
     @SneakyThrows
     void tearDown() {
         PostgresContainers.resetProxies();
+        KeycloakContainer.restoreConnection();
     }
 
 }

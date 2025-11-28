@@ -57,4 +57,4 @@ management:
         liveness:
           include: livenessState, ping
         readiness:
-          include: readinessState, shard
+          include: readinessState, shard, keycloak
