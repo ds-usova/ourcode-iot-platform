@@ -67,7 +67,8 @@ cd ./architecture/infrastructure; cp .env.example .env
 
 #### Configure Artifactory
 
-Artifactory configuration is manual, since REST API and CLI are only available in Pro version ([Github issue](https://github.com/jfrog/artifactory-client-java/issues/203)).
+Artifactory configuration is manual, since REST API and CLI are only available in Pro
+version ([Github issue](https://github.com/jfrog/artifactory-client-java/issues/203)).
 
 * Start Artifactory service:
 
@@ -84,19 +85,21 @@ make start-artifactory
 ![Diagram](media/jfrog-step-2.png)
 ![Diagram](media/jfrog-step-3.png)
 
-####  Publish Libraries to Artifactory
+#### Publish Libraries to Artifactory
 
 * Publish libraries to Artifactory:
 
 ```bash
 make publish-libraries
 ```
+
 * Open [Avro-schemas in Artifactory](http://localhost:8002/ui/native/iot-libs-release-local/org/ourcode/avro-schemas/)
 * Make sure the libraries are published
 
 #### Start the platform
 
 * Start all services:
+
 ```bash
 make up
 ```
@@ -114,7 +117,7 @@ make down
 
 | Service         | URL                                                                                      | Credentials                               |
 |-----------------|------------------------------------------------------------------------------------------|-------------------------------------------|
-| Grafana         | [http://localhost:3000/dashboards](http://localhost:3000/dashboards)                               | GRAFANA_ADMIN_USER:GRAFANA_ADMIN_PASSWORD |
+| Grafana         | [http://localhost:3000/dashboards](http://localhost:3000/dashboards)                     | GRAFANA_ADMIN_USER:GRAFANA_ADMIN_PASSWORD |
 | Redis Insight   | [http://localhost:5540](http://localhost:5540)                                           | N/A                                       |
 | Schema registry | [http://localhost:8081/subjects](http://localhost:8081/subjects)                         | N/A                                       |
 | Kafka UI        | [http://localhost:8082](http://localhost:8082)                                           | N/A                                       |
