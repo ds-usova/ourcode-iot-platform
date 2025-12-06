@@ -611,8 +611,8 @@ services:
       keycloak:
         condition: service_healthy
     environment:
-      ISSUER_URI: http://keycloak:8080/realms/our-code
-      DEVICE_SERVICE_API_PROTECTED: true
+      #ISSUER_URI: http://keycloak:8080/realms/our-code
+      DEVICE_SERVICE_API_PROTECTED: false
       # Shard 0
       SHARD_0_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
       SHARD_0_USER: ${POSTGRES_USER}
