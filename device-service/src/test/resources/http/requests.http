@@ -1,6 +1,6 @@
 ### Device Service local requests
 
-@host = http://localhost:8090
+@host = http://localhost:8092
 
 ### Health (no specific role required)
 GET {{host}}/actuator/health

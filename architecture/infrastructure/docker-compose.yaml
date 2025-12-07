@@ -319,7 +319,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - backend
     command:
@@ -575,7 +575,7 @@ services:
       SHARD_0_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
       SHARD_0_REPLICA_CONNECTION_TIMEOUT: 30000
       # Shard 1
-      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
+      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_1:5432/${POSTGRES_DB_NAME}
       SHARD_1_USER: ${POSTGRES_USER}
       SHARD_1_PASSWORD: ${POSTGRES_PASSWORD}
       SHARD_1_CONNECTION_TIMEOUT: 30000
@@ -608,8 +608,9 @@ services:
         condition: service_healthy
       postgres_shard_1_replica:
         condition: service_healthy
-      keycloak:
-        condition: service_healthy
+      # disabled because API is not protected
+      # keycloak:
+      #   condition: service_healthy
     environment:
       #ISSUER_URI: http://keycloak:8080/realms/our-code
       DEVICE_SERVICE_API_PROTECTED: false
@@ -617,22 +618,22 @@ services:
       SHARD_0_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
       SHARD_0_USER: ${POSTGRES_USER}
       SHARD_0_PASSWORD: ${POSTGRES_PASSWORD}
-      SHARD_0_CONNECTION_TIMEOUT: 30000
+      SHARD_0_CONNECTION_TIMEOUT: 5000
       # Shard 0 replica
       SHARD_0_REPLICA_JDBC_URL: jdbc:postgresql://postgres_shard_0_replica:5432/${POSTGRES_DB_NAME}
       SHARD_0_REPLICA_USER: ${POSTGRES_USER}
       SHARD_0_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
-      SHARD_0_REPLICA_CONNECTION_TIMEOUT: 30000
+      SHARD_0_REPLICA_CONNECTION_TIMEOUT: 5000
       # Shard 1
-      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
+      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_1:5432/${POSTGRES_DB_NAME}
       SHARD_1_USER: ${POSTGRES_USER}
       SHARD_1_PASSWORD: ${POSTGRES_PASSWORD}
-      SHARD_1_CONNECTION_TIMEOUT: 30000
+      SHARD_1_CONNECTION_TIMEOUT: 5000
       # Shard 1 replica
       SHARD_1_REPLICA_JDBC_URL: jdbc:postgresql://postgres_shard_1_replica:5432/${POSTGRES_DB_NAME}
       SHARD_1_REPLICA_USER: ${POSTGRES_USER}
       SHARD_1_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
-      SHARD_1_REPLICA_CONNECTION_TIMEOUT: 30000
+      SHARD_1_REPLICA_CONNECTION_TIMEOUT: 5000
 
 volumes:
   postgres_data:
