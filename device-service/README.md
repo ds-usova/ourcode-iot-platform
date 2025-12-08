@@ -2,17 +2,16 @@
 
 ## Architecture Overview
 
-Device Service is {template}.
+Device Service is a CRUD service for managing IoT devices.
 
 The service consists of the following components:
 
 - **Data Storage**: PostgreSQL database (two shards with read replicas), Sharding Sphere JDBC
 - **Observability**: Prometheus, Grafana
-- {todo}
+- **Security**: Keycloak
 
 ## Context Diagram
 
-{todo: example}
 ![Diagram](architecture/diagrams/image/context-diagram.png)
 
 ## Container Diagram
