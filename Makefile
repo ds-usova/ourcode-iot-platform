@@ -21,6 +21,7 @@ help:
 	@echo "\n  ===== Local Environment Setup ====="
 	@echo "  start-env-event-collector   			   - Start local environment for event collector"
 	@echo "  start-env-device-collector  			   - Start local environment for device collector"
+	@echo "  start-env-device-service   			   - Start local environment for device service"
 	@echo "  start-observability                       - Start observability stack (Prometheus and Grafana)"
 	@echo "  start-artifactory                         - Start artifactory"
 	@echo "  publish-libraries                         - Publish Avro schemas to artifactory"
@@ -59,6 +60,14 @@ start-env-device-collector: start-artifactory
 
 	docker compose -f $(COMPOSE_FILE) up -d \
 		kafka kafka-init schema-registry \
+		postgres_shard_0 postgres_shard_1 \
+		postgres_shard_0_replica postgres_shard_1_replica
+
+start-env-device-service: start-artifactory
+	@echo "Starting local environment for device service..."
+
+	docker compose -f $(COMPOSE_FILE) up -d \
+		keycloak \
 		postgres_shard_0 postgres_shard_1 \
 		postgres_shard_0_replica postgres_shard_1_replica
 

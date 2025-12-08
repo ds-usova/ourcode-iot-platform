@@ -1,4 +1,4 @@
-# Device Collector
+# Device Service
 
 ## Architecture Overview
 
@@ -18,37 +18,42 @@ The service consists of the following components:
 
 ![Diagram](architecture/diagrams/image/container-diagram.png)
 
-## Device Processing Flow
-
-{todo: example}
-![Diagram](architecture/diagrams/image/consume-device-flow.png)
-
 ## Project Structure
-{todo: update}
+
 ```plaintext
 device-service/
 ├── architecture/
 │   ├── diagrams/                    # C4 diagrams
 │   │   ├── image/                   # Images generated from PlantUML
-│   │   ├── consume-device-flow.puml
 │   │   ├── containers.puml
 │   │   └── context.puml
 │   └── src/main/
 │       ├── java/
 │       │   ├── api/                 # Service API (doesn't depend on any other layers)
-│       │   │   ├── events/          # Application events
 │       │   │   ├── exception/
 │       │   │   ├── gateway/         # Gateway interfaces (data providers/consumers)
 │       │   │   ├── model/           # Model classes
 │       │   │   └── service/         # Business logic interfaces
 │       │   ├── application/         # Business logic implementations
-│       │   ├── kafka/               
 │       │   ├── metrics/               
 │       │   ├── persistence/               
-│       │   └── DeviceCollectorApplication.java
+│       │   ├── rest/               
+│       │   ├── util/               
+│       │   └── DeviceServiceApplication.java
 │       └── resources/
 └── README.md
 ```
+
+## Roles
+
+API is protected by Keycloak, which provides the following roles:
+- device-reader - can read devices
+- device-writer - can read, create, update, and delete devices
+
+Mock clients has been set up in keycloak for testing purposes.
+Credentials can be found in [src/test/resources/http/http-client.env.json](src/test/resources/http/http-client.env.json)
+
+When running the service inside Docker container, DEVICE_SERVICE_API_PROTECTED environment variable is set to "false", which means that the service is not protected by Keycloak.
 
 ## Setup Instructions
 
@@ -61,52 +66,31 @@ device-service/
 
 ### Starting the Platform
 
-{todo: update make commands and instructions}
-To start local environment with Kafka and PostgreSQL, run:
+To start local environment with PostgreSQL, run:
 
 ```bash
 cd ..
-make start-env-device-collector
+make start-env-device-service
 ```
 
-To start the Device Collector service, run:
+To start the Device Service, run:
 
 ```bash
 cd ..
-make start-device-collector
+make start-device-service
 ```
 
-To start Device Collector with observability tools (Prometheus and Grafana), run:
+To start Device Service with observability tools (Prometheus and Grafana), run:
 
 ```bash
 cd ..
-make start-device-collector observability
+make start-service-collector observability
 ```
 
 ### Smoke Test
 
-{todo: update smoke test instructions}
-
-* Register device-ids-value (Device.avsc) and device-ids-dlt-value (DeviceDeadLetter.avsc) schemas in Schema Registry with Kafka plugin (see src/main/avro)
-* Produce test messages to `device-ids` topic using Kafka plugin or any Kafka producer tool
-```json
-{
-  "deviceId" : "\bRrIj/h\u0018hA,;",
-  "deviceType" : {
-    "string" : "\u0002\u0016= .@0j6b"
-  },
-  "createdAt" : {
-    "long" : 8625999633872044475
-  },
-  "meta" : {
-    "string" : "\u0002\u0016= .@0j6b"
-  }
-}
-```
-
-* Open Device Collector dashboard in [Grafana](http://localhost:3000/dashboards)
-* Verify that "Number of successfully processed devices" is 1
-
-### Plans
-
-* Implement hot sharding rebalancing
+* Start the Device Service (make start-device-service) and ensure it is running
+* Open [src/test/resources/http/requests.http](src/test/resources/http/requests.http)
+* Select "no-auth" environment
+* Send one of the requests, e.g. "Create a device"
+* Check the response (should be 201 Created)
