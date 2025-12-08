@@ -15,6 +15,8 @@ help:
 	@echo "  start-event-collector                     - Start event collector and its dependencies"
 	@echo "  start-device-collector                    - Start device collector and its dependencies"
 	@echo "  start-device-collector observability      - Start device collector and observability stack"
+	@echo "  start-device-service                      - Start device service and its dependencies"
+	@echo "  start-device-service observability        - Start device service and observability stack"
 
 	@echo "\n  ===== Local Environment Setup ====="
 	@echo "  start-env-event-collector   			   - Start local environment for event collector"
@@ -82,3 +84,17 @@ start-artifactory:
 publish-libraries:
 	@echo "Publishing to artifactory..."
 	docker compose -f $(COMPOSE_FILE) up --build -d avro-schemas
+
+start-device-service: start-artifactory
+	@echo "Starting device service and required dependencies..."
+
+	docker compose -f $(COMPOSE_FILE) up --build -d device-service
+	@if [ "$(ARGS)" = "observability" ]; then \
+  			echo "Starting device service exporters..."; \
+    		$(MAKE) start-observability; \
+    		docker compose -f $(COMPOSE_FILE) up -d \
+    			postgres-exporter-shard-0 \
+    			postgres-exporter-shard-1 \
+    			postgres-exporter-shard-0-replica \
+    			postgres-exporter-shard-1-replica; \
+    fi
