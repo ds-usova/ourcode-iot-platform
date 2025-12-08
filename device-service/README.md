@@ -16,7 +16,6 @@ The service consists of the following components:
 
 ## Container Diagram
 
-{todo: example}
 ![Diagram](architecture/diagrams/image/container-diagram.png)
 
 ## Device Processing Flow
