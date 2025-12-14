@@ -20,8 +20,8 @@ avro-schemas/
 
 - Git
 - Docker
-- Artifactory is running (see docker-compose.yaml)
+- Nexus is running (see docker-compose.yaml)
 
 ### Generate Avro Classes
 
-To generate Avro classes from the schemas, build the project with gradle (build) and publish the schemas to the artifactory (publish).
+To generate Avro classes from the schemas, build the project with gradle (build) and publish the schemas to Nexus (publish).

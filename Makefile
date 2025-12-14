@@ -23,8 +23,8 @@ help:
 	@echo "  start-env-device-collector  			   - Start local environment for device collector"
 	@echo "  start-env-device-service   			   - Start local environment for device service"
 	@echo "  start-observability                       - Start observability stack (Prometheus and Grafana)"
-	@echo "  start-artifactory                         - Start artifactory"
-	@echo "  publish-libraries                         - Publish Avro schemas to artifactory"
+	@echo "  start-nexus                               - Start Nexus repository"
+	@echo "  publish-libraries                         - Publish Avro schemas to Nexus"
 
 # No-op target to avoid errors when no target is specified
 %:
@@ -55,7 +55,7 @@ start-observability:
 	@echo "Starting observability stack..."
 	docker compose -f $(COMPOSE_FILE) up -d prometheus grafana
 
-start-env-device-collector: start-artifactory
+start-env-device-collector: start-nexus
 	@echo "Starting local environment for device collector..."
 
 	docker compose -f $(COMPOSE_FILE) up -d \
@@ -63,7 +63,7 @@ start-env-device-collector: start-artifactory
 		postgres_shard_0 postgres_shard_1 \
 		postgres_shard_0_replica postgres_shard_1_replica
 
-start-env-device-service: start-artifactory
+start-env-device-service: start-nexus
 	@echo "Starting local environment for device service..."
 
 	docker compose -f $(COMPOSE_FILE) up -d \
@@ -71,7 +71,7 @@ start-env-device-service: start-artifactory
 		postgres_shard_0 postgres_shard_1 \
 		postgres_shard_0_replica postgres_shard_1_replica
 
-start-device-collector: start-artifactory
+start-device-collector: start-nexus
 	@echo "Starting device collector and required dependencies..."
 
 	docker compose -f $(COMPOSE_FILE) up --build -d device-collector
@@ -86,15 +86,15 @@ start-device-collector: start-artifactory
     			kafka-exporter; \
     fi
 
-start-artifactory:
-	@echo "Starting artifactory..."
-	docker compose -f $(COMPOSE_FILE) up -d artifactory
+start-nexus:
+	@echo "Starting Nexus..."
+	docker compose -f $(COMPOSE_FILE) up -d nexus nexus-init
 
 publish-libraries:
-	@echo "Publishing to artifactory..."
+	@echo "Publishing to Nexus..."
 	docker compose -f $(COMPOSE_FILE) up --build -d avro-schemas
 
-start-device-service: start-artifactory
+start-device-service: start-nexus
 	@echo "Starting device service and required dependencies..."
 
 	docker compose -f $(COMPOSE_FILE) up --build -d device-service

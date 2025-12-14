@@ -31,12 +31,12 @@ repositories {
     maven {
         allowInsecureProtocol = true
 
-        def artifactoryHost = findProperty("artifactory_host") ?: "localhost:8001"
-        url = uri("http://${artifactoryHost}/artifactory/iot-libs-release-local")
+        def nexusHost = findProperty("nexus_host") ?: "localhost:8081"
+        url = uri("http://${nexusHost}/repository/iot-libs-release-local")
 
         credentials {
-            username = findProperty("artifactory_user") ?: "admin"
-            password = findProperty("artifactory_password") ?: "password"
+            username = findProperty("nexus_user") ?: "admin"
+            password = findProperty("nexus_password") ?: "fdfaec4c-c569-4835-a0cd-d51e5d4500e9"
         }
     }
 }
