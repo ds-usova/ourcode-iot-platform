@@ -1,0 +1,37 @@
+# admin:fdfaec4c-c569-4835-a0cd-d51e5d4500e9
+@auth = YWRtaW46ZmRmYWVjNGMtYzU2OS00ODM1LWEwY2QtZDUxZTVkNDUwMGU5
+
+### Get scripts
+GET http://localhost:8081/service/rest/v1/script
+Authorization: Basic {{auth}}
+
+### Get repos
+GET http://localhost:8081/service/rest/v1/repositories
+Authorization: Basic {{auth}}
+
+### Create repository
+POST http://localhost:8081/service/rest/v1/repositories/maven/hosted
+Authorization: Basic {{auth}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "iot-libs-release-local",
+  "online": true,
+  "storage": {
+    "blobStoreName": "default",
+    "strictContentTypeValidation": true,
+    "writePolicy": "ALLOW_ONCE"
+  },
+  "cleanup": {
+    "policyNames": []
+  },
+  "component": {
+    "proprietaryComponents": true
+  },
+  "maven": {
+    "versionPolicy": "MIXED",
+    "layoutPolicy": "STRICT",
+    "contentDisposition": "ATTACHMENT"
+  }
+}

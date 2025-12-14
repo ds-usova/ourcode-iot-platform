@@ -494,6 +494,39 @@ services:
       timeout: 10s
       retries: 5
 
+  # Nexus Repository Manager
+  nexus:
+    image: sonatype/nexus3:3.87.1
+    container_name: nexus
+    ports:
+      - "8081:8081"
+      - "8085:8085"
+    volumes:
+      - nexus_data:/nexus-data
+    networks:
+      - backend
+    environment:
+      INSTALL4J_ADD_VM_PARAMS: "-Xms512m -Xmx512m -XX:MaxDirectMemorySize=273m"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/service/rest/v1/status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  nexus-init:
+    image: curlimages/curl:latest
+    container_name: nexus-init
+    entrypoint: [ "/usr/bin/env", "sh", "/init-nexus.sh" ]
+    volumes:
+      - nexus_data:/nexus-data:ro
+      - ./nexus/init-nexus.sh:/init-nexus.sh:ro
+    networks:
+      - backend
+    depends_on:
+      nexus:
+        condition: service_healthy
+
   # Applications
   event-collector:
     image: event-collector:latest
@@ -662,6 +695,8 @@ volumes:
     name: ourcode-iot-loki-index
   loki_rules:
     name: ourcode-iot-loki-rules
+  nexus_data:
+    name: ourcode-iot-nexus-data
 
 networks:
   backend:
