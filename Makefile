@@ -3,7 +3,6 @@
 ARGS = $(filter-out $@,$(MAKECMDGOALS))
 
 COMPOSE_FILE := ./architecture/infrastructure/docker-compose.yaml
-ARTIFACTORY_HOST := artifactory:8001
 
 help:
 	@echo "Makefile commands:"
@@ -47,7 +46,7 @@ start-env-event-collector:
 	@echo "Starting local environment for event collector..."
 	docker compose -f $(COMPOSE_FILE) up -d kafka kafka-init schema-registry cassandra cassandra-load-keyspace
 
-start-event-collector:
+start-event-collector: start-nexus
 	@echo "Starting event collector and required dependencies..."
 	docker compose -f $(COMPOSE_FILE) up --build -d event-collector
 

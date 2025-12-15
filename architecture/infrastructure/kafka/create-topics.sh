@@ -1,5 +1,5 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 BOOTSTRAP_SERVER=kafka:9092
 KAFKA_BIN=/opt/kafka/bin
@@ -30,7 +30,7 @@ $KAFKA_BIN/kafka-topics.sh --create --if-not-exists \
   --bootstrap-server "$BOOTSTRAP_SERVER" \
   --replication-factor 1 \
   --partitions 3 \
-  --topic device-ids\
+  --topic device-ids
 
 $KAFKA_BIN/kafka-topics.sh --create --if-not-exists \
   --bootstrap-server "$BOOTSTRAP_SERVER" \

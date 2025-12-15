@@ -200,30 +200,12 @@ services:
     networks:
       - backend
     volumes:
-      - ./kafka/create-topics.sh:/create-topics.sh
-    entrypoint: [ "/bin/sh", "-c" ]
-    command: [ "/create-topics.sh" ]
+      - ./kafka/create-topics.sh:/create-topics.sh:ro
+    entrypoint: ['/bin/bash', '/create-topics.sh']
     depends_on:
       kafka:
         condition: service_healthy
     restart: "no"
-
-  schema-registry:
-    image: bitnami/schema-registry:8.0
-    container_name: schema-registry
-    ports:
-      - "8081:8081"
-    environment:
-      SCHEMA_REGISTRY_KAFKA_BROKERS: PLAINTEXT://kafka:9092
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_AVRO_COMPATIBILY_LEVEL: BACKWARD
-      SCHEMA_REGISTRY_DEBUG: "true"
-    networks:
-      - backend
-    depends_on:
-      kafka:
-        condition: service_healthy
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -311,6 +293,23 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  schema-registry:
+    image: bitnami/schema-registry:8.0
+    container_name: schema-registry
+    ports:
+      - "8086:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKA_BROKERS: PLAINTEXT://kafka:9092
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_AVRO_COMPATIBILY_LEVEL: BACKWARD
+      SCHEMA_REGISTRY_DEBUG: "true"
+    networks:
+      - backend
+    depends_on:
+      kafka:
+        condition: service_healthy
 
   # Observability
   prometheus:
@@ -501,6 +500,7 @@ services:
     depends_on:
       nexus:
         condition: service_healthy
+    restart: "no"
 
   # Applications
   event-collector:
