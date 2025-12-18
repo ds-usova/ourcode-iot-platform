@@ -18,23 +18,28 @@ The service consists of the following components:
 
 ![Diagram](architecture/diagrams/image/container-diagram.png)
 
+## Create Device Sequence Diagram
+
+![Diagram](architecture/diagrams/image/create-device-flow.png)
+
 ## Project Structure
 
 ```plaintext
 device-service/
 ├── architecture/
-│   ├── diagrams/                    # C4 diagrams
-│   │   ├── image/                   # Images generated from PlantUML
-│   │   ├── containers.puml
-│   │   └── context.puml
-│   └── src/main/
-│       ├── java/
-│       │   ├── api/                 # Service API (doesn't depend on any other layers)
-│       │   │   ├── exception/
-│       │   │   ├── gateway/         # Gateway interfaces (data providers/consumers)
-│       │   │   ├── model/           # Model classes
-│       │   │   └── service/         # Business logic interfaces
-│       │   ├── application/         # Business logic implementations
+│   ├── diagrams/                       # C4 diagrams
+│   │   ├── image/                      # Images generated from PlantUML
+│   │   ├── containers-diagram.puml   
+│   │   ├── context-diagram.puml   
+│   │   └── create-device-flow.puml   
+│   └── src/main/   
+│       ├── java/   
+│       │   ├── api/                    # Service API (doesn't depend on any other layers)
+│       │   │   ├── exception/   
+│       │   │   ├── gateway/            # Gateway interfaces (data providers/consumers)
+│       │   │   ├── model/              # Model classes
+│       │   │   └── service/            # Business logic interfaces
+│       │   ├── application/            # Business logic implementations
 │       │   ├── metrics/               
 │       │   ├── persistence/               
 │       │   ├── rest/               
