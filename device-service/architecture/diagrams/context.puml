@@ -1,0 +1,18 @@
+@startuml Context
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Device Service - Context Diagram
+
+' Internal
+System(device_service, "Device Service", "Manages IoT devices")
+
+' External systems
+System_Ext(orchestrator, "API Orchestrator", "Coordinates API requests between services")
+System_Ext(keycloak, "Keycloak", "Authentication and authorization")
+
+' Relations
+Rel_D(orchestrator, device_service, "Manages devices (CRUD)", "REST")
+Rel_L(device_service, keycloak, "Verifies JWT tokens")
+Rel_L(orchestrator, keycloak, "Retrieves tokens")
+
+@enduml

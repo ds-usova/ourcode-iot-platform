@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
+    url: jdbc:shardingsphere:classpath:db/sharding.yaml?placeholder-type=system_props
+  retry:
+    device-gateway:
+      max-attempts: 2
+      backoff-delay: 200
+
+logging:
+  level:
+    root: WARN
+    org.springframework: WARN
+    org.ourcode: DEBUG
+    common: DEBUG
+    org.springframework.jdbc.core.JdbcTemplate: DEBUG
+    org.springframework.jdbc.core.StatementCreatorUtils: TRACE
+
+app:
+  apiProtected: false

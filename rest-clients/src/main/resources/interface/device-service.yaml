@@ -1,0 +1,218 @@
+openapi: 3.1.0
+info:
+  title: Device Service API
+  description: |-
+    Basic CRUD API to manage devices.
+  version: 1.0.0
+tags:
+  - name: Device
+
+security:
+  - bearerAuth: []
+
+paths:
+  /device:
+    post:
+      tags:
+        - Device
+      summary: Add a new device.
+      description: Add a new device.
+      operationId: addDevice
+      requestBody:
+        description: Create a new device
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+        required: true
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '409':
+          description: Device already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /device/{deviceId}:
+    get:
+      tags:
+        - Device
+      summary: Find device by ID.
+      description: Returns a single device.
+      operationId: getDeviceById
+      parameters:
+        - name: deviceId
+          in: path
+          description: ID of device to return
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    patch:
+      tags:
+        - Device
+      summary: Updates a device
+      description: Updates a device.
+      operationId: updateDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdate'
+      parameters:
+        - name: deviceId
+          in: path
+          description: ID of device that needs to be updated
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - Device
+      summary: Deletes a device.
+      description: Delete a device.
+      operationId: deleteDevice
+      parameters:
+        - name: deviceId
+          in: path
+          description: Device id to delete
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      responses:
+        '204':
+          description: Device deleted
+        '404':
+          description: Device doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    DeviceUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: sensor
+        meta:
+          type: string
+          example: { "temp": "25" }
+    Device:
+      required:
+        - id
+        - type
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: device123
+        type:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: sensor
+        meta:
+          type: string
+          example: { "temp": "25" }
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Unique error code to identify the error
+          example: 25575e97-3624-4577-9258-1b708663a93a
+        message:
+          type: string
+          description: A human-readable message providing more details about the error
+          example: Device not found
+      required:
+        - code
+        - message
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

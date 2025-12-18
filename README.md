@@ -65,38 +65,35 @@ Create a `.env` file and override the default environment variables if needed.
 cd ./architecture/infrastructure; cp .env.example .env
 ```
 
-#### Configure Artifactory
+#### Configure Nexus
 
-Artifactory configuration is manual, since REST API and CLI are only available in Pro version ([Github issue](https://github.com/jfrog/artifactory-client-java/issues/203)).
+Nexus is automatically configured through the init-nexus.sh script:
 
-* Start Artifactory service:
+* To start Nexus, run the following command:
 
 ```bash
-make start-artifactory
+make start-nexus
 ```
 
-* Make sure Artifactory container is running and healthy.
-* Open [http://localhost:8002](http://localhost:8002) in your browser and login with default credentials
-  (`admin:password`).
-* Create a new local repository named `iot-libs-release-local`
+* Make sure Nexus container is running and healthy.
+* The repository `iot-libs-release-local` will be automatically created.
+* You can access Nexus UI at [http://localhost:8081](http://localhost:8081) with credentials `admin:NEXUS_PASSWORD`.
 
-![Diagram](media/jfrog-step-1.png)
-![Diagram](media/jfrog-step-2.png)
-![Diagram](media/jfrog-step-3.png)
+#### Publish Libraries to Nexus
 
-####  Publish Libraries to Artifactory
-
-* Publish libraries to Artifactory:
+* Publish libraries to Nexus:
 
 ```bash
 make publish-libraries
 ```
-* Open [Avro-schemas in Artifactory](http://localhost:8002/ui/native/iot-libs-release-local/org/ourcode/avro-schemas/)
+
+* Open [Avro-schemas in Nexus](http://localhost:8081/#browse/browse:iot-libs-release-local)
 * Make sure the libraries are published
 
 #### Start the platform
 
 * Start all services:
+
 ```bash
 make up
 ```
@@ -114,12 +111,12 @@ make down
 
 | Service         | URL                                                                                      | Credentials                               |
 |-----------------|------------------------------------------------------------------------------------------|-------------------------------------------|
-| Grafana         | [http://localhost:3000/dashboards](http://localhost:3000/dashboards)                               | GRAFANA_ADMIN_USER:GRAFANA_ADMIN_PASSWORD |
+| Grafana         | [http://localhost:3000/dashboards](http://localhost:3000/dashboards)                     | GRAFANA_ADMIN_USER:GRAFANA_ADMIN_PASSWORD |
 | Redis Insight   | [http://localhost:5540](http://localhost:5540)                                           | N/A                                       |
-| Schema registry | [http://localhost:8081/subjects](http://localhost:8081/subjects)                         | N/A                                       |
+| Schema registry | [http://localhost:8086/subjects](http://localhost:8086/subjects)                         | N/A                                       |
 | Kafka UI        | [http://localhost:8082](http://localhost:8082)                                           | N/A                                       |
 | Keycloak        | [http://localhost:8083](http://localhost:8083)                                           | KEYCLOAK_ADMIN:KEYCLOAK_ADMIN_PASSWORD    |
 | Camunda         | [http://localhost:8084/camunda/app/cockpit/](http://localhost:8084/camunda/app/cockpit/) | demo:demo                                 |
 | MinIO Console   | [http://localhost:9001](http://localhost:9001)                                           | MINIO_ROOT_USER:MINIO_ROOT_PASSWORD       |
 | Prometheus      | [http://localhost:9090](http://localhost:9090)                                           | N/A                                       |
-| Artifactory     | [http://localhost:8002](http://localhost:8002)                                           | admin:password                            |
+| Nexus           | [http://localhost:8081](http://localhost:8081)                                           | admin:NEXUS_PASSWORD                      |

@@ -1,0 +1,40 @@
+@startuml Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title "Container Diagram"
+
+' Styles
+UpdateElementStyle("container", $borderColor="#444444")
+UpdateElementStyle("external_container", $borderColor="#444444")
+
+AddRelTag("dashed", $lineStyle = DashedLine())
+
+System_Boundary(system, "Device Service") {
+
+    ' Containers
+    Container(device_service, "Device Service", "Spring Boot", "Managesdevices")
+
+    Container(sharding_sphere, "Sharding Sphere JDBC", "Library", "Provides sharding and read/write splitting")
+
+    ContainerDb(device_db_shard_0, "Devices Database", "PostgreSQL", "Shard 0")
+    ContainerDb(device_db_shard_1, "Devices Database", "PostgreSQL", "Shard 1")
+    ContainerDb(device_db_replica_0, "Devices Database", "PostgreSQL", "Read only replica 0")
+    ContainerDb(device_db_replica_1, "Devices Database", "PostgreSQL", "Read only replica 1")
+
+}
+
+' External containers
+Container_Ext(orchestrator, "API Orchestrator", "", "Coordinates API calls between services")
+
+Rel_D(orchestrator, device_service, "Manages devices", "REST API")
+Rel_D(device_service, sharding_sphere, "Writes and reads devices")
+
+Rel_D(sharding_sphere, device_db_shard_0, "Writes devices")
+Rel_D(sharding_sphere, device_db_shard_1, "Writes devices")
+Rel_D(sharding_sphere, device_db_replica_0, "Reads devices")
+Rel_D(sharding_sphere, device_db_replica_1, "Reads devices")
+
+Rel_R(device_db_shard_0, device_db_replica_0, "Synchronous replication", $tags="dashed")
+Rel_L(device_db_shard_1, device_db_replica_1, "Synchronous replication", $tags="dashed")
+
+@enduml

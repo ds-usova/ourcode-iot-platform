@@ -1,0 +1,4 @@
+{
+  "type": "sensor",
+  "meta": "{\"temp\": \"22C\", \"humidity\": \"45%\"}"
+}

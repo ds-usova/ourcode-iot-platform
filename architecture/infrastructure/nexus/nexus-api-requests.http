@@ -1,0 +1,79 @@
+# admin:fdfaec4c-c569-4835-a0cd-d51e5d4500e9
+# api reference: https://help.sonatype.com/en/api-reference.html
+@auth = YWRtaW46ZmRmYWVjNGMtYzU2OS00ODM1LWEwY2QtZDUxZTVkNDUwMGU5
+
+@repo = iot-libs-release-local
+@name = avro-schemas
+@version = 2.2.0
+
+### Get scripts
+GET http://localhost:8081/service/rest/v1/script
+Authorization: Basic {{auth}}
+
+### Get repos
+GET http://localhost:8081/service/rest/v1/repositories
+Authorization: Basic {{auth}}
+
+### Create repository
+POST http://localhost:8081/service/rest/v1/repositories/maven/hosted
+Authorization: Basic {{auth}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "{{repo}}",
+  "online": true,
+  "storage": {
+    "blobStoreName": "default",
+    "strictContentTypeValidation": true,
+    "writePolicy": "ALLOW_ONCE"
+  },
+  "cleanup": {
+    "policyNames": []
+  },
+  "component": {
+    "proprietaryComponents": true
+  },
+  "maven": {
+    "versionPolicy": "MIXED",
+    "layoutPolicy": "STRICT",
+    "contentDisposition": "ATTACHMENT"
+  }
+}
+
+### Search components by repository + name (any version)
+GET http://localhost:8081/service/rest/v1/search?repository={{repo}}&name={{name}}
+Authorization: Basic {{auth}}
+Accept: application/json
+
+### Change password for user `admin`
+@newPassword = ChangeMe123!
+
+PUT http://localhost:8081/service/rest/v1/security/users/admin/change-password
+Authorization: Basic {{auth}}
+Content-Type: text/plain
+Accept: application/json
+
+{{newPassword}}
+
+### Get all users
+
+GET http://localhost:8081/service/rest/v1/security/users
+Authorization: Basic {{auth}}
+Accept: application/json
+
+### Accept EULA
+# Step 1: Fetch current EULA status and disclaimer text. Copy the `disclaimer` value from the response.
+GET http://localhost:8081/service/rest/v1/system/eula
+Authorization: Basic {{auth}}
+
+### Step 2: Accept EULA by sending both accepted=true and the exact disclaimer text.
+POST http://localhost:8081/service/rest/v1/system/eula
+Authorization: Basic {{auth}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "accepted": true,
+  "disclaimer": "Use of Sonatype Nexus Repository - Community Edition is governed by the End User License Agreement at https://links.sonatype.com/products/nxrm/ce-eula. By returning the value from ‘accepted:false’ to ‘accepted:true’, you acknowledge that you have read and agree to the End User License Agreement at https://links.sonatype.com/products/nxrm/ce-eula."
+}

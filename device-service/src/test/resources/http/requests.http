@@ -1,0 +1,45 @@
+### Device Service local requests
+
+@host = http://localhost:8092
+
+### Health (no specific role required)
+GET {{host}}/actuator/health
+Accept: application/json
+Authorization: Bearer {{$auth.token("our-code")}}
+
+### Metrics (no specific role required)
+GET {{host}}/actuator/prometheus
+Authorization: Bearer {{$auth.token("our-code")}}
+
+### Create a device (requires role: device-writer)
+POST {{host}}/device
+Authorization: Bearer {{$auth.token("our-code")}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "id": "device-123",
+  "type": "sensor",
+  "meta": ""
+}
+
+### Get specific device (requires role: device-reader)
+GET {{host}}/device/device-123
+Authorization: Bearer {{$auth.token("our-code")}}
+Accept: application/json
+
+### Update device (PATCH; requires role: device-writer)
+PATCH {{host}}/device/device-123
+Authorization: Bearer {{$auth.token("our-code")}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "type": "new sensor",
+  "meta": "new meta information"
+}
+
+### Delete device (requires role: device-writer)
+DELETE {{host}}/device/device-123
+Authorization: Bearer {{$auth.token("our-code")}}
+Accept: */*

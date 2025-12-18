@@ -1,0 +1,79 @@
+@startuml "Create Device Flow"
+
+' Define styles
+skinparam ParticipantPadding 60
+skinparam BoxPadding 40
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+skinparam maxMessageSize 150
+skinparam responseMessageBelowArrow true
+
+' Define colors
+skinparam participant {
+    BackgroundColor<<Service>> #E1F5FF
+    BorderColor<<Service>> #0288D1
+}
+
+actor "Rest Client" as RestClient
+participant "Device Service" as DS <<Service>>
+participant "ShardingSphere JDBC" as SSJDBC
+database "Shard 1\n(PostgreSQL)" as SHARD_1
+database "Shard 2\n(PostgreSQL)" as SHARD_2
+
+== Create Device Request ==
+
+RestClient -> DS: POST /device
+activate DS
+note right of DS
+    Validate request:
+    - Device ID format
+    - Type format
+end note
+
+alt #FFE0E0 <back:white>Invalid Request</back>
+    DS --> RestClient: **400 Bad Request**
+else #E8F5E9 Valid Request
+
+    DS -> SSJDBC: insert device
+    activate SSJDBC
+
+    note right of SSJDBC
+        Route to shard based on deviceId
+    end note
+
+    group Shard Routing
+        SSJDBC -> SHARD_1: INSERT INTO devices
+        activate SHARD_1
+
+        alt #E8F5E9 <back:white>Device Does Not Exist</back>
+            SHARD_1 --> SSJDBC: insert success
+        else #FFE0E0 <back:white>Device Already Exists</back>
+            SHARD_1 --> SSJDBC: constraint violation
+        end
+        deactivate SHARD_1
+
+        |||
+
+        SSJDBC -> SHARD_2: INSERT INTO devices
+        activate SHARD_2
+
+        alt #E8F5E9 <back:white>Device Does Not Exist</back>
+            SHARD_2 --> SSJDBC: insert success
+        else #FFE0E0 <back:white>Device Already Exists</back>
+            SHARD_2 --> SSJDBC: constraint violation
+        end
+        deactivate SHARD_2
+    end
+
+    SSJDBC --> DS: operation result
+    deactivate SSJDBC
+
+    alt #E8F5E9 <back:white>Device Created Successfully</back>
+        DS --> RestClient: **201 Created**
+    else #FFE0E0 <back:white>Device Already Exists</back>
+        DS --> RestClient: **409 Conflict**
+    end
+    deactivate DS
+end
+
+@enduml

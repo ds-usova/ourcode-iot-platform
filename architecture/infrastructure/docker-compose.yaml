@@ -39,7 +39,7 @@ services:
       - "5432:5432"
     environment:
       <<: *postgres-env
-      # Keycloack database configuration
+      # Keycloak database configuration
       KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       KEYCLOAK_DB_SCHEMA: ${KEYCLOAK_DB_SCHEMA}
@@ -200,30 +200,12 @@ services:
     networks:
       - backend
     volumes:
-      - ./kafka/create-topics.sh:/create-topics.sh
-    entrypoint: [ "/bin/sh", "-c" ]
-    command: [ "/create-topics.sh" ]
+      - ./kafka/create-topics.sh:/create-topics.sh:ro
+    entrypoint: ['/bin/bash', '/create-topics.sh']
     depends_on:
       kafka:
         condition: service_healthy
     restart: "no"
-
-  schema-registry:
-    image: bitnami/schema-registry:8.0
-    container_name: schema-registry
-    ports:
-      - "8081:8081"
-    environment:
-      SCHEMA_REGISTRY_KAFKA_BROKERS: PLAINTEXT://kafka:9092
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
-      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_AVRO_COMPATIBILY_LEVEL: BACKWARD
-      SCHEMA_REGISTRY_DEBUG: "true"
-    networks:
-      - backend
-    depends_on:
-      kafka:
-        condition: service_healthy
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -263,9 +245,13 @@ services:
     container_name: keycloak
     ports:
       - "8083:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
     networks:
       - backend
-    command: start-dev
+    command:
+      - start-dev
+      - --import-realm
     environment:
       KC_HOSTNAME: "localhost"
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
@@ -308,6 +294,23 @@ services:
       retries: 5
       start_period: 60s
 
+  schema-registry:
+    image: bitnami/schema-registry:8.0
+    container_name: schema-registry
+    ports:
+      - "8086:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKA_BROKERS: PLAINTEXT://kafka:9092
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_AVRO_COMPATIBILY_LEVEL: BACKWARD
+      SCHEMA_REGISTRY_DEBUG: "true"
+    networks:
+      - backend
+    depends_on:
+      kafka:
+        condition: service_healthy
+
   # Observability
   prometheus:
     image: prom/prometheus:latest
@@ -315,7 +318,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - backend
     command:
@@ -350,6 +353,45 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    user: "root"
+    volumes:
+      - ./observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_chunks:/tmp/loki/chunks
+      - loki_index:/tmp/loki/index
+      - loki_rules:/tmp/loki/rules
+    networks:
+      - backend
+
+  alloy:
+    image: grafana/alloy:v1.12.0
+    container_name: alloy
+    user: root
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/log:/var/log:ro
+    environment:
+      GRAFANA_LOKI_URL: http://loki:3100/loki/api/v1/push
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:9080
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    depends_on:
+      loki:
+        condition: service_started
+    networks:
+      - backend
 
   postgres-exporter:
     <<: *postgres-exporter
@@ -424,32 +466,41 @@ services:
       timeout: 10s
       retries: 5
 
-  # Artifactory
-  artifactory:
-    image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.59.9
-    container_name: artifactory
+  # Nexus Repository Manager
+  nexus:
+    image: sonatype/nexus3:3.87.1
+    container_name: nexus
     ports:
-      - "8001:8081"
-      - "8002:8082"
+      - "8081:8081"
+      - "8085:8085"
     volumes:
-      - artifactory_data:/var/opt/jfrog/artifactory
-    environment:
-      JF_ROUTER_ENTRYPOINTS_EXTERNALPORT: 8082
-      JF_SHARED_DATABASE_TYPE: postgresql
-      JF_SHARED_DATABASE_DRIVER: org.postgresql.Driver
-      JF_SHARED_DATABASE_USERNAME: ${POSTGRES_USER}
-      JF_SHARED_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
-      JF_SHARED_DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_NAME}
+      - nexus_data:/nexus-data
     networks:
       - backend
-    depends_on:
-      postgres:
-        condition: service_healthy
+    environment:
+      INSTALL4J_ADD_VM_PARAMS: "-Xms512m -Xmx512m -XX:MaxDirectMemorySize=273m"
     healthcheck:
-      test: [ "CMD", "curl", "-sf", "http://localhost:8081/artifactory/api/system/ping" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/service/rest/v1/status" ]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 120s
+
+  nexus-init:
+    image: curlimages/curl:latest
+    container_name: nexus-init
+    entrypoint: [ "/usr/bin/env", "sh", "/init-nexus.sh" ]
+    environment:
+      NEXUS_PASSWORD: ${NEXUS_PASSWORD}
+    volumes:
+      - nexus_data:/nexus-data:ro
+      - ./nexus/init-nexus.sh:/init-nexus.sh:ro
+    networks:
+      - backend
+    depends_on:
+      nexus:
+        condition: service_healthy
+    restart: "no"
 
   # Applications
   event-collector:
@@ -461,7 +512,9 @@ services:
       context: ./../../event-collector
       network: host
       args:
-        ARTIFACTORY_HOST: artifactory:8081
+        NEXUS_HOST: nexus:8081
+        NEXUS_ADMIN: ${NEXUS_ADMIN}
+        NEXUS_PASSWORD: ${NEXUS_PASSWORD}
     networks:
       - backend
     depends_on:
@@ -487,7 +540,19 @@ services:
       context: ./../../avro-schemas
       network: host
       args:
-        ARTIFACTORY_HOST: artifactory:8081
+        NEXUS_HOST: nexus:8081
+        NEXUS_ADMIN: ${NEXUS_ADMIN}
+        NEXUS_PASSWORD: ${NEXUS_PASSWORD}
+
+  rest-clients:
+    image: rest-clients:latest
+    build:
+      context: ./../../rest-clients
+      network: host
+      args:
+        NEXUS_HOST: nexus:8081
+        NEXUS_ADMIN: ${NEXUS_ADMIN}
+        NEXUS_PASSWORD: ${NEXUS_PASSWORD}
 
   device-collector:
     image: device-collector:latest
@@ -498,11 +563,11 @@ services:
       context: ./../../device-collector
       network: host
       args:
-        ARTIFACTORY_HOST: artifactory:8081
+        NEXUS_HOST: nexus:8081
     networks:
       - backend
     depends_on:
-      artifactory:
+      nexus:
         condition: service_started
       kafka:
         condition: service_healthy
@@ -532,7 +597,7 @@ services:
       SHARD_0_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
       SHARD_0_REPLICA_CONNECTION_TIMEOUT: 30000
       # Shard 1
-      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
+      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_1:5432/${POSTGRES_DB_NAME}
       SHARD_1_USER: ${POSTGRES_USER}
       SHARD_1_PASSWORD: ${POSTGRES_PASSWORD}
       SHARD_1_CONNECTION_TIMEOUT: 30000
@@ -541,6 +606,56 @@ services:
       SHARD_1_REPLICA_USER: ${POSTGRES_USER}
       SHARD_1_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
       SHARD_1_REPLICA_CONNECTION_TIMEOUT: 30000
+
+  device-service:
+    image: device-service:latest
+    container_name: device-service
+    ports:
+      - "8092:8090"
+    build:
+      context: ./../../device-service
+      network: host
+      args:
+        NEXUS_HOST: nexus:8081
+    networks:
+      - backend
+    depends_on:
+      nexus:
+        condition: service_healthy
+      postgres_shard_0:
+        condition: service_healthy
+      postgres_shard_0_replica:
+        condition: service_healthy
+      postgres_shard_1:
+        condition: service_healthy
+      postgres_shard_1_replica:
+        condition: service_healthy
+      # disabled because API is not protected
+      # keycloak:
+      #   condition: service_healthy
+    environment:
+      #ISSUER_URI: http://keycloak:8080/realms/our-code
+      DEVICE_SERVICE_API_PROTECTED: false
+      # Shard 0
+      SHARD_0_JDBC_URL: jdbc:postgresql://postgres_shard_0:5432/${POSTGRES_DB_NAME}
+      SHARD_0_USER: ${POSTGRES_USER}
+      SHARD_0_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_0_CONNECTION_TIMEOUT: 5000
+      # Shard 0 replica
+      SHARD_0_REPLICA_JDBC_URL: jdbc:postgresql://postgres_shard_0_replica:5432/${POSTGRES_DB_NAME}
+      SHARD_0_REPLICA_USER: ${POSTGRES_USER}
+      SHARD_0_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_0_REPLICA_CONNECTION_TIMEOUT: 5000
+      # Shard 1
+      SHARD_1_JDBC_URL: jdbc:postgresql://postgres_shard_1:5432/${POSTGRES_DB_NAME}
+      SHARD_1_USER: ${POSTGRES_USER}
+      SHARD_1_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_1_CONNECTION_TIMEOUT: 5000
+      # Shard 1 replica
+      SHARD_1_REPLICA_JDBC_URL: jdbc:postgresql://postgres_shard_1_replica:5432/${POSTGRES_DB_NAME}
+      SHARD_1_REPLICA_USER: ${POSTGRES_USER}
+      SHARD_1_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
+      SHARD_1_REPLICA_CONNECTION_TIMEOUT: 5000
 
 volumes:
   postgres_data:
@@ -561,8 +676,14 @@ volumes:
     name: ourcode-iot-postgres-data-shard-0-replica
   postgres_shard_1_replica_data:
     name: ourcode-iot-postgres-data-shard-1-replica
-  artifactory_data:
-    name: ourcode-iot-artifactory-data
+  loki_chunks:
+    name: ourcode-iot-loki-chunks
+  loki_index:
+    name: ourcode-iot-loki-index
+  loki_rules:
+    name: ourcode-iot-loki-rules
+  nexus_data:
+    name: ourcode-iot-nexus-data
 
 networks:
   backend:

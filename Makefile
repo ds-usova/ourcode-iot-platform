@@ -3,7 +3,6 @@
 ARGS = $(filter-out $@,$(MAKECMDGOALS))
 
 COMPOSE_FILE := ./architecture/infrastructure/docker-compose.yaml
-ARTIFACTORY_HOST := artifactory:8001
 
 help:
 	@echo "Makefile commands:"
@@ -15,13 +14,16 @@ help:
 	@echo "  start-event-collector                     - Start event collector and its dependencies"
 	@echo "  start-device-collector                    - Start device collector and its dependencies"
 	@echo "  start-device-collector observability      - Start device collector and observability stack"
+	@echo "  start-device-service                      - Start device service and its dependencies"
+	@echo "  start-device-service observability        - Start device service and observability stack"
 
 	@echo "\n  ===== Local Environment Setup ====="
 	@echo "  start-env-event-collector   			   - Start local environment for event collector"
 	@echo "  start-env-device-collector  			   - Start local environment for device collector"
+	@echo "  start-env-device-service   			   - Start local environment for device service"
 	@echo "  start-observability                       - Start observability stack (Prometheus and Grafana)"
-	@echo "  start-artifactory                         - Start artifactory"
-	@echo "  publish-libraries                         - Publish Avro schemas to artifactory"
+	@echo "  start-nexus                               - Start Nexus repository"
+	@echo "  publish-libraries                         - Publish Avro schemas and Rest Clients to Nexus"
 
 # No-op target to avoid errors when no target is specified
 %:
@@ -44,7 +46,7 @@ start-env-event-collector:
 	@echo "Starting local environment for event collector..."
 	docker compose -f $(COMPOSE_FILE) up -d kafka kafka-init schema-registry cassandra cassandra-load-keyspace
 
-start-event-collector:
+start-event-collector: start-nexus
 	@echo "Starting event collector and required dependencies..."
 	docker compose -f $(COMPOSE_FILE) up --build -d event-collector
 
@@ -52,7 +54,7 @@ start-observability:
 	@echo "Starting observability stack..."
 	docker compose -f $(COMPOSE_FILE) up -d prometheus grafana
 
-start-env-device-collector: start-artifactory
+start-env-device-collector: start-nexus
 	@echo "Starting local environment for device collector..."
 
 	docker compose -f $(COMPOSE_FILE) up -d \
@@ -60,7 +62,15 @@ start-env-device-collector: start-artifactory
 		postgres_shard_0 postgres_shard_1 \
 		postgres_shard_0_replica postgres_shard_1_replica
 
-start-device-collector: start-artifactory
+start-env-device-service: start-nexus
+	@echo "Starting local environment for device service..."
+
+	docker compose -f $(COMPOSE_FILE) up -d \
+		keycloak \
+		postgres_shard_0 postgres_shard_1 \
+		postgres_shard_0_replica postgres_shard_1_replica
+
+start-device-collector: start-nexus
 	@echo "Starting device collector and required dependencies..."
 
 	docker compose -f $(COMPOSE_FILE) up --build -d device-collector
@@ -75,10 +85,25 @@ start-device-collector: start-artifactory
     			kafka-exporter; \
     fi
 
-start-artifactory:
-	@echo "Starting artifactory..."
-	docker compose -f $(COMPOSE_FILE) up -d artifactory
+start-nexus:
+	@echo "Starting Nexus..."
+	docker compose -f $(COMPOSE_FILE) up -d nexus nexus-init
 
-publish-libraries:
-	@echo "Publishing to artifactory..."
+publish-libraries: start-nexus
+	@echo "Publishing to Nexus..."
 	docker compose -f $(COMPOSE_FILE) up --build -d avro-schemas
+	docker compose -f $(COMPOSE_FILE) up --build -d rest-clients
+
+start-device-service: publish-libraries
+	@echo "Starting device service and required dependencies..."
+
+	docker compose -f $(COMPOSE_FILE) up --build -d device-service
+	@if [ "$(ARGS)" = "observability" ]; then \
+  			echo "Starting device service exporters..."; \
+    		$(MAKE) start-observability; \
+    		docker compose -f $(COMPOSE_FILE) up -d \
+    			postgres-exporter-shard-0 \
+    			postgres-exporter-shard-1 \
+    			postgres-exporter-shard-0-replica \
+    			postgres-exporter-shard-1-replica; \
+    fi
