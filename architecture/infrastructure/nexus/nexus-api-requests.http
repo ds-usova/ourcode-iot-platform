@@ -46,11 +46,6 @@ GET http://localhost:8081/service/rest/v1/search?repository={{repo}}&name={{name
 Authorization: Basic {{auth}}
 Accept: application/json
 
-### Search assets by repository + name (any version)
-GET http://localhost:8081/service/rest/v1/search/assets?repository={{repo}}&name={{name}}
-Authorization: Basic {{auth}}
-Accept: application/json
-
 ### Change password for user `admin`
 @newPassword = ChangeMe123!
 

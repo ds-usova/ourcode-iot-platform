@@ -3,7 +3,6 @@ plugins {
     id "jacoco"
     id "org.springframework.boot" version "$springBootVersion"
     id "io.spring.dependency-management" version "$springDependencyManagementVersion"
-    id "org.openapi.generator" version "$openApiGeneratorVersion"
 }
 
 group = "org.ourcode"
@@ -46,8 +45,6 @@ dependencies {
     implementation 'org.springframework.security:spring-security-oauth2-resource-server'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
 
-    implementation "io.swagger.core.v3:swagger-annotations:2.2.15"
-
     // PostgreSQL
     implementation "org.springframework.boot:spring-boot-starter-data-jdbc"
     implementation "org.apache.shardingsphere:shardingsphere-jdbc:${shardingJdbcVersion}"
@@ -73,6 +70,9 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
 
+    // API
+    implementation "org.ourcode:rest-clients:${restClientId}"
+
     // Test
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.springframework.boot:spring-boot-testcontainers"
@@ -88,34 +88,6 @@ dependencies {
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
-openApiGenerate {
-    generatorName.set("spring")
-    inputSpec.set(file("src/main/resources/interface/device-service.yaml").toURI().toString())
-
-    modelPackage.set("org.ourcode.rest.model")
-    apiPackage.set("org.ourcode.rest.api")
-
-    generateApiDocumentation.set(false)
-    generateApiTests.set(false)
-    generateModelDocumentation.set(false)
-    generateModelTests.set(false)
-
-    configOptions.set([
-            basePackage            : "org.ourcode.generated",
-            interfaceOnly          : "true",
-            dateLibrary            : "java8",
-            openApiNullable        : "false",
-            serializableModel      : "true",
-            library                : "spring-boot",
-            useBeanValidation      : "true",
-            useJakartaEe           : "true",
-            useTags                : "true",
-    ])
-}
-
-sourceSets.main.java.srcDir "${buildDir}/generate-resources/main/src/main/java"
-
-compileJava.dependsOn tasks.openApiGenerate
 
 tasks.named("test") {
     useJUnitPlatform()
@@ -159,14 +131,6 @@ jacocoTestCoverageVerification {
                 minimum = 0.90
             }
         }
-    }
-
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: [
-                    "**/org/ourcode/rest/**",
-            ])
-        }))
     }
 }
 

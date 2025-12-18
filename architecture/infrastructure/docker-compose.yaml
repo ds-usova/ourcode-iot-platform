@@ -544,6 +544,16 @@ services:
         NEXUS_ADMIN: ${NEXUS_ADMIN}
         NEXUS_PASSWORD: ${NEXUS_PASSWORD}
 
+  rest-clients:
+    image: rest-clients:latest
+    build:
+      context: ./../../rest-clients
+      network: host
+      args:
+        NEXUS_HOST: nexus:8081
+        NEXUS_ADMIN: ${NEXUS_ADMIN}
+        NEXUS_PASSWORD: ${NEXUS_PASSWORD}
+
   device-collector:
     image: device-collector:latest
     container_name: device-collector

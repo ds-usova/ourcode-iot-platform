@@ -23,7 +23,7 @@ help:
 	@echo "  start-env-device-service   			   - Start local environment for device service"
 	@echo "  start-observability                       - Start observability stack (Prometheus and Grafana)"
 	@echo "  start-nexus                               - Start Nexus repository"
-	@echo "  publish-libraries                         - Publish Avro schemas to Nexus"
+	@echo "  publish-libraries                         - Publish Avro schemas and Rest Clients to Nexus"
 
 # No-op target to avoid errors when no target is specified
 %:
@@ -89,11 +89,12 @@ start-nexus:
 	@echo "Starting Nexus..."
 	docker compose -f $(COMPOSE_FILE) up -d nexus nexus-init
 
-publish-libraries:
+publish-libraries: start-nexus
 	@echo "Publishing to Nexus..."
 	docker compose -f $(COMPOSE_FILE) up --build -d avro-schemas
+	docker compose -f $(COMPOSE_FILE) up --build -d rest-clients
 
-start-device-service: start-nexus
+start-device-service: publish-libraries
 	@echo "Starting device service and required dependencies..."
 
 	docker compose -f $(COMPOSE_FILE) up --build -d device-service
