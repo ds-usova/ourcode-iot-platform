@@ -1,0 +1,34 @@
+@startuml Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+title "Container Diagram"
+
+' Styles
+UpdateElementStyle("container", $borderColor="#444444")
+UpdateElementStyle("external_container", $borderColor="#444444")
+
+System_Boundary(system, "Failed Events Processor") {
+
+    ' Containers
+    Container(fep, "Failed Events Processor", "Spring Boot", "Process failed events")
+
+    ContainerQueue(devices_dlt_topic, "DLT Device topic", "Apache Kafka")
+    ContainerQueue(events_dlt_topic, "DLT Event topic", "Apache Kafka")
+}
+
+' External containers
+Container_Ext(event_collector, "Event Collector", "Collects IoT events")
+Container_Ext(device_collector, "Device Collector", "Collects IoT devices")
+ContainerDb_Ext(minio, "Object Storage", "MinIO", "Todo add bucket to the description")
+
+Rel_U(fep, devices_dlt_topic, "Reads failed devices")
+Rel_U(fep, events_dlt_topic, "Reads failed events")
+
+Rel(fep, minio, "Stores processed failed events and devices", "S3 API")
+
+Rel(device_collector, devices_dlt_topic, "Writes devices that could not be processed")
+Rel(event_collector, events_dlt_topic, "Writes events that could not be processed")
+
+@enduml

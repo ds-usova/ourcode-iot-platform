@@ -1,0 +1,23 @@
+@startuml Context
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_LEFT_RIGHT()
+
+title Failed Events Processor - Context Diagram
+
+' Internal
+System(fep, "Failed Events Processor", "Processes failed events from IoT devices")
+
+' External systems
+System_Ext(event_collector, "Event Collector", "Processes IoT events")
+System_Ext(device_collector, "Device Collector", "Processes IoT devices")
+
+System_Ext(minio, "Object Storage", "S3-compatible storage\nfor event data")
+
+' Relations
+Rel_U(fep, event_collector, "Reads failed events", "MQTT")
+Rel_U(fep, device_collector, "Reads failed devices", "MQTT")
+
+Rel(fep, minio, "Stores failed events", "S3 API")
+
+@enduml

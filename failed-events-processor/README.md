@@ -1,12 +1,13 @@
-# Device Collector
+# Failed Events Processor
 
 ## Architecture Overview
 
-Device Collector is a microservice designed to collect and process data from various IoT devices. It ingests data through Kafka topics, processes the information, and stores it in a PostgreSQL database.
+Failed Events Processor is a microservice designed to handle and process events that have failed during their initial processing in a data pipeline. 
+It listens to designated Kafka topics for failed events and stores them in an object storage for further analysis.
 
 The service consists of the following components:
 
-- **Data Storage**: PostgreSQL database (two shards with read replicas), Sharding Sphere JDBC
+- **Data Storage**: MinIO
 - **Messaging**: Kafka with Schema Registry
 - **Observability**: Prometheus, Grafana
 
@@ -20,11 +21,11 @@ The service consists of the following components:
 
 ## Device Processing Flow
 
-![Diagram](architecture/diagrams/image/consume-device-flow.png)
+![Diagram](architecture/diagrams/image/process-device-dlt.png)
 
 ## Project Structure
 ```plaintext
-device-collector/
+failed-events-processor/
 ├── architecture/
 │   ├── diagrams/                    # C4 diagrams
 │   │   ├── image/                   # Images generated from PlantUML
@@ -42,8 +43,7 @@ device-collector/
 │       │   ├── application/         # Business logic implementations
 │       │   ├── kafka/               
 │       │   ├── metrics/               
-│       │   ├── persistence/               
-│       │   └── DeviceCollectorApplication.java
+│       │   └── FailedEventsProcessorApplication.java
 │       └── resources/
 └── README.md
 ```
@@ -60,6 +60,7 @@ device-collector/
 
 ### Starting the Platform
 
+TODO: updated
 To start local environment with Kafka and PostgreSQL, run:
 
 ```bash

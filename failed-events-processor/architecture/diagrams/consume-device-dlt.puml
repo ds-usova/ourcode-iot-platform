@@ -1,0 +1,74 @@
+@startuml "Process Device DLT Message Flow"
+
+' Define styles
+skinparam ParticipantPadding 100
+skinparam BoxPadding 40
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+skinparam maxMessageSize 200
+skinparam responseMessageBelowArrow true
+
+' Define colors
+skinparam participant {
+    BackgroundColor<<Service>> #E1F5FF
+    BorderColor<<Service>> #0288D1
+}
+
+actor "Kafka Broker" as Kafka
+participant "Failed Events Processor" as FE <<Service>>
+participant "DeviceDltAvroSerializer" as AVRO <<Service>>
+database "MinIO Storage" as MinIO <<Storage>>
+
+== Process Device DLT ==
+
+Kafka -> FE: send DLT message \n [DeviceDeadLetter, device-ids-dlt]
+activate FE
+
+FE -> AVRO: deserialize Avro
+activate AVRO
+
+alt #FFE0E0 Deserialization Failed<back:white>
+    note over AVRO
+        Corrupted/malformed data
+        - Schema mismatch
+        - Invalid binary format
+
+        Map to DeviceDeadLetter:
+        - rawEvent (base64)
+        - DeserializationError
+    end note
+    AVRO --> FE: DeviceDeadLetter DTO
+else #E8F5E9 Valid Avro Schema
+    AVRO --> FE: DeviceDeadLetter DTO
+end
+deactivate AVRO
+
+FE -> MinIO: store DLT as JSON
+activate MinIO
+
+note right of MinIO
+    Store JSON under path:
+    - {topic}
+    - {exception-type}
+    - {year}
+    - {month}
+    - {day}
+end note
+
+alt #FFE0E0 Storage Failed
+    MinIO --> FE: storage error
+    note over FE
+        Log error but DO NOT
+        acknowledge to Kafka
+        (will retry on next poll)
+    end note
+    deactivate MinIO
+else #E8F5E9 Storage Successful
+    MinIO --> FE: storage confirmation
+    deactivate MinIO
+
+    FE -> Kafka: acknowledge offset
+end
+
+deactivate FE
+@enduml
