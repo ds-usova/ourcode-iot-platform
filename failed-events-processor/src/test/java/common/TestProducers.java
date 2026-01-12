@@ -8,7 +8,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.ourcode.avro.DeviceDeadLetter;
-import org.ourcode.devicecollector.kafka.configuration.KafkaTopics;
+import org.ourcode.failedevents.kafka.configuration.KafkaTopics;
 
 import java.util.List;
 import java.util.Properties;

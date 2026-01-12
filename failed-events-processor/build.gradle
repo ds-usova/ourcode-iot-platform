@@ -55,6 +55,9 @@ dependencies {
     implementation "io.confluent:kafka-avro-serializer:${kafkaAvroSerializerVersion}"
     implementation "org.ourcode:avro-schemas:${avroSchemasVersion}"
 
+    // MinIO
+    implementation "io.minio:minio:${minioVersion}"
+
     // Lombok
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
@@ -72,6 +75,7 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter"
     testImplementation "org.testcontainers:kafka"
     testImplementation "org.testcontainers:toxiproxy"
+    testImplementation "org.testcontainers:testcontainers-minio:${minioTestContainerVersion}"
 
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
