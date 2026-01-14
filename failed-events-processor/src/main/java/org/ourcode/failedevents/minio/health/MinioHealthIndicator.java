@@ -3,7 +3,7 @@ package org.ourcode.failedevents.minio.health;
 import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
 import lombok.extern.slf4j.Slf4j;
-import org.ourcode.failedevents.minio.MinioProperties;
+import org.ourcode.failedevents.minio.configuration.MinioProperties;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;

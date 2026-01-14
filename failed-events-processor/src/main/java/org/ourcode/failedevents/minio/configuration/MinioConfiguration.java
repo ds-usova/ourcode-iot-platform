@@ -1,4 +1,4 @@
-package org.ourcode.failedevents.minio;
+package org.ourcode.failedevents.minio.configuration;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;

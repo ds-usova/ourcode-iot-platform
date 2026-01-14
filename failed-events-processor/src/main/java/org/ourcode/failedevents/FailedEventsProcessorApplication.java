@@ -1,7 +1,7 @@
 package org.ourcode.failedevents;
 
 import org.ourcode.failedevents.kafka.configuration.KafkaTopics;
-import org.ourcode.failedevents.minio.MinioProperties;
+import org.ourcode.failedevents.minio.configuration.MinioProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
