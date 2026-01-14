@@ -20,7 +20,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-public class MinioFailedEventGatewayTest extends AbstractIntegrationTest {
+public class MinioFailedEventGatewayIntegrationTest extends AbstractIntegrationTest {
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
@@ -28,7 +28,7 @@ public class MinioFailedEventGatewayTest extends AbstractIntegrationTest {
     }
 
     @Autowired
-    private MinioFailedEventGateway minioFailedEventGateway;
+    private MinioFailedEventGateway target;
 
     @Autowired
     private MinioProperties minioProperties;
@@ -50,7 +50,7 @@ public class MinioFailedEventGatewayTest extends AbstractIntegrationTest {
      * - Object name follows expected pattern
      */
     @Test
-    @DisplayName("when failed event has JSON payload - then save it correctly")
+    @DisplayName("happy path - when failed event has JSON payload - then save it correctly")
     void saveFailedEventWithJsonPayload() throws Exception {
         // Given: failed event with JSON payload
         String eventId = UUID.randomUUID().toString();
@@ -66,7 +66,7 @@ public class MinioFailedEventGatewayTest extends AbstractIntegrationTest {
         );
 
         // When: saving the event
-        minioFailedEventGateway.save(failedEvent);
+        target.save(failedEvent);
 
         // Then: object is stored in MinIO
         String expectedObjectName = "device-ids-dlt/NullPointerException/2026/1/13/10-30-45-" + eventId + ".json";
@@ -96,7 +96,7 @@ public class MinioFailedEventGatewayTest extends AbstractIntegrationTest {
      * - Object name follows expected pattern
      */
     @Test
-    @DisplayName("when failed event has non-JSON payload - then save it correctly")
+    @DisplayName("happy path - when failed event has non-JSON payload - then save it correctly")
     void saveFailedEventWithNonJsonPayload() throws Exception {
         // Given: failed event with plain text payload
         String eventId = UUID.randomUUID().toString();
@@ -112,7 +112,7 @@ public class MinioFailedEventGatewayTest extends AbstractIntegrationTest {
         );
 
         // When: saving the event
-        minioFailedEventGateway.save(failedEvent);
+        target.save(failedEvent);
 
         // Then: object is stored in MinIO
         String expectedObjectName = "device-ids-dlt/NullPointerException/2026/1/13/15-45-30-" + eventId + ".txt";
