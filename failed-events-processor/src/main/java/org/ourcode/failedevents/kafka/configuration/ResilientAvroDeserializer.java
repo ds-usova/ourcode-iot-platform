@@ -1,4 +1,4 @@
-package org.ourcode.failedevents.kafka.consumer;
+package org.ourcode.failedevents.kafka.configuration;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import lombok.extern.slf4j.Slf4j;

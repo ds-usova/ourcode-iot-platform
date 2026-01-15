@@ -1,4 +1,4 @@
-package org.ourcode.failedevents.kafka.consumer;
+package org.ourcode.failedevents.kafka.configuration;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;

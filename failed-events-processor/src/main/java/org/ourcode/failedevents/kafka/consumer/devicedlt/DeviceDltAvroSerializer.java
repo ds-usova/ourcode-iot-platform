@@ -1,7 +1,7 @@
 package org.ourcode.failedevents.kafka.consumer.devicedlt;
 
 import org.ourcode.avro.DeviceDeadLetter;
-import org.ourcode.failedevents.kafka.consumer.ResilientAvroDeserializer;
+import org.ourcode.failedevents.kafka.configuration.ResilientAvroDeserializer;
 
 import java.util.Base64;
 
