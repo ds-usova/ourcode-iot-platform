@@ -61,6 +61,9 @@ public class ToxicTest extends AbstractIntegrationTest {
         Awaitility.await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofSeconds(1)).untilAsserted(() -> {
             Map<String, DeviceEventDeadLetter> deadLetters = testConsumers.readDlt();
             assertThat(deadLetters).withFailMessage("Expected one message in DLT").hasSize(1);
+
+            log.debug("DLT messages: {}", deadLetters);
+
             assertThat(deadLetters.containsKey("event-1")).isTrue();
 
             DeviceEventDeadLetter deadLetter = deadLetters.get("event-1");
@@ -68,6 +71,7 @@ public class ToxicTest extends AbstractIntegrationTest {
             assertThat(deadLetter.getDeviceId()).isEqualTo("device-1");
             assertThat(deadLetter.getType()).isEqualTo("TEMPERATURE");
             assertThat(deadLetter.getPayload()).isEqualTo("{\"temp\":25}");
+            assertThat(deadLetter.getException()).isEqualTo("CassandraDriverTimeoutException");
             assertThat(deadLetter.getErrorMessage()).contains("Query timed out");
             assertThat(deadLetter.getRawEvent()).isNull();
             assertThat(deadLetter.getTimestamp()).isNotNull();

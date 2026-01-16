@@ -8,6 +8,7 @@
     { "name": "timestamp", "type": ["null", "long"], "default": null },
     { "name": "type", "type": ["null", "string"], "default": null },
     { "name": "payload", "type": ["null", "string"], "default": null },
+    { "name": "exception", "type":  "string" },
     { "name": "errorMessage", "type": "string" },
     { "name": "rawEvent", "type": ["null", "string"], "default": null }
   ]
