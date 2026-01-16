@@ -10,6 +10,7 @@ public class DeviceDltAvroSerializer extends ResilientAvroDeserializer<DeviceDea
     @Override
     protected DeviceDeadLetter map(byte[] data) {
         return new DeviceDeadLetter(null, null, null, null,
+                "DeserializationException",
                 "Corrupted message - unable to deserialize dlt",
                 Base64.getEncoder().encodeToString(data)
         );

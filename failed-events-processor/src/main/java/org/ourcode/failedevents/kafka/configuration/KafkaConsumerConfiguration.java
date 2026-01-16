@@ -35,7 +35,6 @@ public class KafkaConsumerConfiguration {
     @Value("${spring.kafka.consumer.properties.specific.avro.reader}")
     private boolean specificAvroReader;
 
-
     @Value("${spring.kafka.consumer.concurrency}")
     private int listenerConcurrency;
 

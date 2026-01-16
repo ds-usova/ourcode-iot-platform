@@ -31,14 +31,19 @@ test/
 │   ├── common/                                 # Shared test utilities
 │   │   ├── AbstractIntegrationTest.java        # Base class for integration tests
 │   │   ├── SchemaManager.java                  # Kafka schema registration
+│   │   ├── TestMinioClient.java                # MinIO test client utilities
 │   │   ├── TestProducers.java                  # Test Kafka producers
 │   │   └── containers/                         # TestContainer configurations
 │   │       ├── KafkaContainer.java
 │   │       ├── MinioContainer.java
+│   │       ├── Network.java
 │   │       ├── SchemaRegistryContainer.java
 │   │       └── ToxiproxyContainer.java
 │   │
 │   ├── integration/                            # Integration tests
+│   │   ├── health/
+│   │   │   ├── KafkaHealthIntegrationTest.java
+│   │   │   └── MinioHealthIntegrationTest.java
 │   │   └── minio/
 │   │       └── MinioFailedEventGatewayIntegrationTest.java  
 │   │
@@ -48,9 +53,13 @@ test/
 │   │       └── ObjectNameGeneratorTest.java        
 │   │
 │   └── system_test/                            # End-to-end system tests
+│       ├── DeviceDltCollectionTest.java
+│       ├── EventDltCollectionTest.java
+│       └── ToxicTest.java
 │
 └── resources/
-    └── application-test.yml                    # Test configuration
+    ├── application-test.yaml                   # Test configuration
+    └── logback-test.xml                        # Test logging configuration
 ```
 
 ## Test Types

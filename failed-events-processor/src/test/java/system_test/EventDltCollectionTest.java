@@ -3,7 +3,6 @@ package system_test;
 import common.AbstractIntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.ourcode.avro.DeviceDeadLetter;
 import org.ourcode.avro.DeviceEventDeadLetter;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -23,6 +22,7 @@ public class EventDltCollectionTest extends AbstractIntegrationTest {
         DeviceEventDeadLetter dl = DeviceEventDeadLetter.newBuilder()
                 .setEventId("event-456")
                 .setDeviceId("device-123")
+                .setException("IllegalArgumentException")
                 .setErrorMessage("Simulated error for testing")
                 .build();
 

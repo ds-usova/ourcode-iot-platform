@@ -1,9 +1,11 @@
 package common;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import common.containers.KafkaContainer;
 import common.containers.MinioContainer;
 import common.containers.SchemaRegistryContainer;
 import common.containers.ToxiproxyContainer;
+import io.minio.MinioClient;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.ourcode.failedevents.FailedEventsProcessorApplication;
 import org.ourcode.failedevents.kafka.configuration.KafkaTopics;
+import org.ourcode.failedevents.minio.configuration.MinioProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
@@ -28,7 +31,17 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     private KafkaTopics kafkaTopics;
 
+    @Autowired
+    private MinioClient minioClient;
+
+    @Autowired
+    private MinioProperties minioProperties;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     protected TestProducers testProducers;
+    protected TestMinioClient testMinioClient;
 
     static {
         log.info("MinIO is running: {}", MinioContainer.CONTAINER.isRunning());
@@ -53,6 +66,7 @@ public abstract class AbstractIntegrationTest {
     @PostConstruct
     void init() {
         testProducers = new TestProducers(kafkaTopics, KafkaContainer.CONTAINER.getBootstrapServers(), schemaRegistryUrl());
+        testMinioClient = new TestMinioClient(minioClient, minioProperties, objectMapper);
     }
 
     @BeforeAll
@@ -67,7 +81,7 @@ public abstract class AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        // No-op for now
+        testMinioClient.deleteAllObjects();
     }
 
     private static String schemaRegistryUrl() {
