@@ -76,7 +76,7 @@ public class KafkaConsumerConfiguration {
             KafkaTemplate<String, Object> kafkaTemplate,
             ApplicationEventPublisher applicationEventPublisher
     ) {
-        return new DeviceReportingRecoverer(applicationEventPublisher, new DeviceDLTPublishingRecoverer(kafkaTemplate));
+        return new DeviceReportingRecoverer(applicationEventPublisher, new DeviceDeadLetterPublishingRecoverer(kafkaTemplate));
     }
 
     @Bean

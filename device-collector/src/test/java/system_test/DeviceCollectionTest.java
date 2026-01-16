@@ -147,8 +147,11 @@ public class DeviceCollectionTest extends AbstractIntegrationTest {
 
             assertThat(devices).withFailMessage("Expected exactly one event in DLT").hasSize(1);
             assertThat(devices).containsKey("invalid-key");
-            assertThat(devices.get("invalid-key").getErrorMessage()).isEqualTo("failed to deserialize");
-            assertThat(devices.get("invalid-key").getRawEvent()).isEqualTo(Base64.getEncoder().encodeToString(invalidPayload));
+
+            DeviceDeadLetter deviceDeadLetter = devices.get("invalid-key");
+            assertThat(deviceDeadLetter.getException()).isEqualTo("DeserializationException");
+            assertThat(deviceDeadLetter.getErrorMessage()).isEqualTo("failed to deserialize");
+            assertThat(deviceDeadLetter.getRawEvent()).isEqualTo(Base64.getEncoder().encodeToString(invalidPayload));
 
             List<DeviceEntity> savedEvents = deviceRepository.findAll();
             assertThat(savedEvents).isEmpty();

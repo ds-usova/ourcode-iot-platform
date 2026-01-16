@@ -17,9 +17,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @Slf4j
-public class DeviceDLTPublishingRecoverer extends DeadLetterPublishingRecoverer {
+public class DeviceDeadLetterPublishingRecoverer extends DeadLetterPublishingRecoverer {
 
-    public DeviceDLTPublishingRecoverer(KafkaTemplate<String, Object> kafkaTemplate) {
+    public DeviceDeadLetterPublishingRecoverer(KafkaTemplate<String, Object> kafkaTemplate) {
         super(kafkaTemplate);
     }
 
@@ -31,11 +31,14 @@ public class DeviceDLTPublishingRecoverer extends DeadLetterPublishingRecoverer 
             @Nullable byte[] key,
             @Nullable byte[] value
     ) {
-        Header exceptionMessageHeader = headers.lastHeader(KafkaHeaders.DLT_EXCEPTION_MESSAGE);
-        String errorMessage = (exceptionMessageHeader != null && exceptionMessageHeader.value() != null)
-                ? new String(exceptionMessageHeader.value(), StandardCharsets.UTF_8) : "N/A";
+        String exception = extractException(
+                getHeaderAsString(headers, KafkaHeaders.DLT_EXCEPTION_CAUSE_FQCN, "miscellaneous")
+        );
+        String errorMessage = getHeaderAsString(headers, KafkaHeaders.DLT_EXCEPTION_MESSAGE, "N/A");
 
-        DeviceDeadLetter.Builder builder = DeviceDeadLetter.newBuilder().setErrorMessage(errorMessage);
+        DeviceDeadLetter.Builder builder = DeviceDeadLetter.newBuilder()
+                .setException(exception)
+                .setErrorMessage(errorMessage);
 
         DeviceDeadLetter deadLetter;
         if (record.value() instanceof Device device) {
@@ -46,7 +49,9 @@ public class DeviceDLTPublishingRecoverer extends DeadLetterPublishingRecoverer 
                     .setRawEvent(null)
                     .build();
         } else {
-            deadLetter = builder.setRawEvent(value != null ? Base64.getEncoder().encodeToString(value) : null).build();
+            deadLetter = builder
+                    .setRawEvent(value != null ? Base64.getEncoder().encodeToString(value) : null)
+                    .build();
         }
 
         log.error("Publishing to device DLT topic {}: {}", topicPartition.topic(), deadLetter);
@@ -57,6 +62,22 @@ public class DeviceDLTPublishingRecoverer extends DeadLetterPublishingRecoverer 
                 deadLetter,
                 headers
         );
+    }
+
+    private String extractException(String fullException) {
+        int lastDotIndex = fullException.lastIndexOf('.');
+        if (lastDotIndex >= 0) {
+            return fullException.substring(lastDotIndex + 1);
+        }
+        return fullException;
+    }
+
+    private String getHeaderAsString(Headers headers, String key, String defaultValue) {
+        Header header = headers.lastHeader(key);
+        if (header != null && header.value() != null) {
+            return new String(header.value(), StandardCharsets.UTF_8);
+        }
+        return defaultValue;
     }
 
 }
