@@ -20,13 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class DeviceDltCollectionTest extends AbstractIntegrationTest {
 
-    @Autowired
-    private KafkaTopics kafkaTopics;
-
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
         AbstractIntegrationTest.setProperties(registry);
     }
+
+    @Autowired
+    private KafkaTopics kafkaTopics;
 
     /**
      * Given:

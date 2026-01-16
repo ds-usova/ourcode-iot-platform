@@ -1,17 +1,43 @@
 package org.ourcode.failedevents.kafka.consumer.eventdlt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.ourcode.avro.DeviceEventDeadLetter;
+import org.ourcode.failedevents.api.model.FailedEvent;
+import org.ourcode.failedevents.api.service.FailedEventService;
+import org.ourcode.failedevents.kafka.configuration.KafkaTopics;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Component
 public class DeviceEventDeadLetterKafkaConsumer {
+
+    private final KafkaTopics kafkaTopics;
+    private final FailedEventService failedEventService;
+    private final ExecutorService executor;
+    private final ObjectMapper objectMapper;
+
+    public DeviceEventDeadLetterKafkaConsumer(
+            KafkaTopics kafkaTopics,
+            FailedEventService failedEventService,
+            ObjectMapper objectMapper
+    ) {
+        this.kafkaTopics = kafkaTopics;
+        this.failedEventService = failedEventService;
+        this.executor = Executors.newVirtualThreadPerTaskExecutor();
+        this.objectMapper = objectMapper;
+    }
 
     @KafkaListener(
             topics = "${app.kafka.topics.events-dlt}",
@@ -24,18 +50,55 @@ public class DeviceEventDeadLetterKafkaConsumer {
     ) {
         log.debug("Received {} device event dead letter records", records.size());
 
-        for (ConsumerRecord<String, DeviceEventDeadLetter> record : records) {
-            DeviceEventDeadLetter deadLetter = record.value();
+        List<CompletableFuture<Void>> futures = records.stream()
+                .map(record ->
+                        CompletableFuture.runAsync(() -> processRecord(record), executor)
+                ).toList();
 
-            log.error("Processing Device Event DLT - EventId: {}, DeviceId: {}, Type: {}, Error: {}",
-                    deadLetter.getEventId(),
-                    deadLetter.getDeviceId(),
-                    deadLetter.getType(),
-                    deadLetter.getErrorMessage());
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            ack.acknowledge();
+            log.debug("Successfully processed {} device event dead letter records", records.size());
+        } catch (Exception e) {
+            log.error("Failed to process device event dead letter records", e);
+            throw new RuntimeException("Failed to process one or more device event dead letter records", e);
         }
+    }
 
-        ack.acknowledge();
-        log.debug("Successfully processed {} device event dead letter records", records.size());
+    private void processRecord(ConsumerRecord<String, DeviceEventDeadLetter> record) {
+        FailedEvent failedEvent = toDomain(record.value(), record.timestamp());
+        failedEventService.save(failedEvent);
+    }
+
+    private FailedEvent toDomain(DeviceEventDeadLetter deadLetter, long timestamp) {
+        return new FailedEvent(
+                deadLetter.getEventId() == null ? UUID.randomUUID().toString() : deadLetter.getEventId(),
+                kafkaTopics.eventsDlt(),
+                deadLetter.getException(),
+                generatePayload(deadLetter),
+                Instant.ofEpochMilli(timestamp)
+        );
+    }
+
+    private String generatePayload(DeviceEventDeadLetter deadLetter) {
+        try {
+            HashMap<String, Object> payload = new HashMap<>();
+            if (deadLetter.getRawEvent() != null) {
+                payload.put("rawEvent", deadLetter.getRawEvent());
+            } else {
+                payload.put("eventId", deadLetter.getEventId());
+                payload.put("deviceId", deadLetter.getDeviceId());
+                payload.put("timestamp", deadLetter.getTimestamp().toString()); // Remove L suffix
+                payload.put("type", deadLetter.getType());
+                payload.put("payload", deadLetter.getPayload());
+            }
+
+            payload.put("errorMessage", deadLetter.getErrorMessage());
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            log.error("Failed to generate payload for dead letter", e);
+            return deadLetter.toString();
+        }
     }
 
 }
