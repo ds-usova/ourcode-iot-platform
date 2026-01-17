@@ -75,7 +75,7 @@ class MinioFailedEventGatewayUnitTest {
         // When/Then: saving the event throws FailedEventStorageException
         assertThatThrownBy(() -> target.save(failedEvent))
                 .isInstanceOf(FailedEventStorageException.class)
-                .hasMessageContaining("Failed to store failed event")
+                .hasMessageContaining("MinIO connection error")
                 .hasCauseInstanceOf(RuntimeException.class);
     }
 

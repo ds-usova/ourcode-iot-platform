@@ -8,12 +8,18 @@ import org.ourcode.failedevents.api.exception.FailedEventStorageException;
 import org.ourcode.failedevents.api.gateway.FailedEventGateway;
 import org.ourcode.failedevents.api.model.FailedEvent;
 import org.ourcode.failedevents.minio.configuration.MinioProperties;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 
 @Slf4j
 @Component
+@Retryable(
+        maxAttemptsExpression = "${spring.retry.minio-gateway.max-attempts}",
+        backoff = @Backoff(delayExpression = "${spring.retry.minio-gateway.backoff-delay}")
+)
 public class MinioFailedEventGateway implements FailedEventGateway {
 
     private static final String JSON_CONTENT_TYPE = "application/json";
@@ -60,7 +66,7 @@ public class MinioFailedEventGateway implements FailedEventGateway {
             log.debug("Successfully uploaded object to MinIO: {}", objectName);
         } catch (Exception e) {
             log.error("Failed to upload object to MinIO: {}", objectName, e);
-            throw new FailedEventStorageException("Failed to store failed event", e);
+            throw new FailedEventStorageException(e.getMessage(), e);
         }
     }
 
