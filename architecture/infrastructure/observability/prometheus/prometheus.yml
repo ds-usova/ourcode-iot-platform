@@ -64,3 +64,27 @@ scrape_configs:
       - targets: [ 'device-service:8090' ]
     scrape_interval: 10s
     metrics_path: /actuator/prometheus
+
+  - job_name: 'failed-events-processor'
+    static_configs:
+      - targets: [ 'failed-events-processor:8090' ]
+    scrape_interval: 10s
+    metrics_path: /actuator/prometheus
+
+  - job_name: 'minio-cluster'
+    static_configs:
+      - targets: [ 'minio:9000' ]
+    scrape_interval: 10s
+    metrics_path: /minio/v2/metrics/cluster
+
+  - job_name: 'minio-bucket'
+    static_configs:
+      - targets: [ 'minio:9000' ]
+    scrape_interval: 10s
+    metrics_path: /minio/v2/metrics/bucket
+
+  - job_name: 'minio-node'
+    static_configs:
+      - targets: [ 'minio:9000' ]
+    scrape_interval: 10s
+    metrics_path: /minio/v2/metrics/node
