@@ -11,19 +11,22 @@ help:
 	@echo "  reset                       - Reset all services (stop, remove volumes, and start)"
 
 	@echo "\n  ===== Build and start services ====="
-	@echo "  start-event-collector                     - Start event collector and its dependencies"
-	@echo "  start-device-collector                    - Start device collector and its dependencies"
-	@echo "  start-device-collector observability      - Start device collector and observability stack"
-	@echo "  start-device-service                      - Start device service and its dependencies"
-	@echo "  start-device-service observability        - Start device service and observability stack"
+	@echo "  start-event-collector                          - Start event collector and its dependencies"
+	@echo "  start-device-collector                         - Start device collector and its dependencies"
+	@echo "  start-device-collector observability           - Start device collector and observability stack"
+	@echo "  start-device-service                           - Start device service and its dependencies"
+	@echo "  start-device-service observability             - Start device service and observability stack"
+	@echo "  start-failed-events-processor                  - Start failed events processor and its dependencies"
+	@echo "  start-failed-events-processor observability    - Start failed events processor and observability stack"
 
 	@echo "\n  ===== Local Environment Setup ====="
-	@echo "  start-env-event-collector   			   - Start local environment for event collector"
-	@echo "  start-env-device-collector  			   - Start local environment for device collector"
-	@echo "  start-env-device-service   			   - Start local environment for device service"
-	@echo "  start-observability                       - Start observability stack (Prometheus and Grafana)"
-	@echo "  start-nexus                               - Start Nexus repository"
-	@echo "  publish-libraries                         - Publish Avro schemas and Rest Clients to Nexus"
+	@echo "  start-env-event-collector   			        - Start local environment for event collector"
+	@echo "  start-env-device-collector  			        - Start local environment for device collector"
+	@echo "  start-env-device-service   			        - Start local environment for device service"
+	@echo "  start-env-failed-events-processor		        - Start local environment for failed events processor"
+	@echo "  start-observability                            - Start observability stack (Prometheus and Grafana)"
+	@echo "  start-nexus                                    - Start Nexus repository"
+	@echo "  publish-libraries                              - Publish Avro schemas and Rest Clients to Nexus"
 
 # No-op target to avoid errors when no target is specified
 %:
@@ -70,6 +73,10 @@ start-env-device-service: start-nexus
 		postgres_shard_0 postgres_shard_1 \
 		postgres_shard_0_replica postgres_shard_1_replica
 
+start-env-failed-events-processor:
+	@echo "Starting local environment for failed events processor..."
+	docker compose -f $(COMPOSE_FILE) up -d kafka kafka-init schema-registry minio
+
 start-device-collector: start-nexus
 	@echo "Starting device collector and required dependencies..."
 
@@ -106,4 +113,15 @@ start-device-service: publish-libraries
     			postgres-exporter-shard-1 \
     			postgres-exporter-shard-0-replica \
     			postgres-exporter-shard-1-replica; \
+    fi
+
+start-failed-events-processor: publish-libraries
+	@echo "Starting failed events processor and required dependencies..."
+
+	docker compose -f $(COMPOSE_FILE) up --build -d failed-events-processor
+	@if [ "$(ARGS)" = "observability" ]; then \
+  			echo "Starting device service exporters..."; \
+    		$(MAKE) start-observability; \
+    		docker compose -f $(COMPOSE_FILE) up -d \
+    			kafka-exporter; \
     fi

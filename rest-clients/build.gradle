@@ -86,3 +86,50 @@ publishing {
     }
 
 }
+
+String artifactUrl() {
+    def groupName = project.group.toString().replace('.', '/')
+    def version = project.version
+    def name = project.name
+
+    def nexusHost = findProperty("nexus_host") ?: "localhost:8081"
+    return "http://${nexusHost}/repository/iot-libs-release-local/" +
+            "${groupName}/${name}/${version}/${name}-${version}.jar"
+}
+
+String authHeader() {
+    def nexusUser = findProperty("nexus_user") ?: "admin"
+    def nexusPassword = findProperty("nexus_password") ?: "fdfaec4c-c569-4835-a0cd-d51e5d4500e9"
+
+    def auth = "${nexusUser}:${nexusPassword}".bytes.encodeBase64().toString()
+    return "Basic ${auth}"
+}
+
+boolean artifactAlreadyPublished() {
+    def artifactUrl = artifactUrl()
+    println "Checking if artifact exists at: ${artifactUrl}"
+
+    def connection = new URI(artifactUrl).toURL().openConnection()
+    connection.setRequestMethod("HEAD")
+    connection.setRequestProperty("Authorization", authHeader())
+    connection.connect()
+
+    if (connection.responseCode == 200) {
+        println "Artifact ${group}:${name}:${version} already exists in Nexus"
+        println "Skipping publish - artifact already exists"
+
+        return true
+    } else {
+        println "Response code: ${connection.responseCode}"
+        println "Artifact ${group}:${name}:${version} does not exist in Nexus, or cannot be accessed"
+        println "Proceeding with publish"
+
+        return false
+    }
+}
+
+tasks.withType(PublishToMavenRepository).configureEach {
+    onlyIf {
+        !artifactAlreadyPublished()
+    }
+}

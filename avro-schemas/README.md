@@ -24,4 +24,4 @@ avro-schemas/
 
 ### Generate Avro Classes
 
-To generate Avro classes from the schemas, build the project with gradle (build) and publish the schemas to Nexus (publish).
+To generate Avro classes from the schemas, build the project with Gradle (build) and publish the schemas to Nexus (publish).

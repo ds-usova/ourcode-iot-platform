@@ -536,6 +536,7 @@ services:
 
   avro-schemas:
     image: avro-schemas:latest
+    container_name: avro-schemas
     build:
       context: ./../../avro-schemas
       network: host
