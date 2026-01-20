@@ -84,10 +84,6 @@ dependencies {
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
-tasks.named("test") {
-    useJUnitPlatform()
-}
-
 tasks.withType(JavaCompile).configureEach {
     options.annotationProcessorPath = configurations.annotationProcessor
 }
@@ -95,6 +91,11 @@ tasks.withType(JavaCompile).configureEach {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+
+    testLogging {
+        events "failed"
+        showStandardStreams = true
+    }
 }
 
 jacoco {

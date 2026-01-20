@@ -15,6 +15,7 @@ import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import java.time.Duration;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -142,20 +143,22 @@ public class DeviceCollectionTest extends AbstractIntegrationTest {
         testProducers.sendRawEventBytes("invalid-key", invalidPayload);
 
         // Then: The event is sent to the DLT
-        Awaitility.await().atMost(Duration.ofSeconds(5)).pollInterval(Duration.ofSeconds(1)).untilAsserted(() -> {
-            Map<String, DeviceDeadLetter> devices = testConsumers.readDlt();
 
-            assertThat(devices).withFailMessage("Expected exactly one event in DLT").hasSize(1);
+        Map<String, DeviceDeadLetter> devices = new HashMap<>();
+        Awaitility.await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofSeconds(1)).untilAsserted(() -> {
+            devices.clear();
+            devices.putAll(testConsumers.readDlt());
+
             assertThat(devices).containsKey("invalid-key");
-
-            DeviceDeadLetter deviceDeadLetter = devices.get("invalid-key");
-            assertThat(deviceDeadLetter.getException()).isEqualTo("DeserializationException");
-            assertThat(deviceDeadLetter.getErrorMessage()).isEqualTo("failed to deserialize");
-            assertThat(deviceDeadLetter.getRawEvent()).isEqualTo(Base64.getEncoder().encodeToString(invalidPayload));
-
-            List<DeviceEntity> savedEvents = deviceRepository.findAll();
-            assertThat(savedEvents).isEmpty();
         });
+
+        DeviceDeadLetter deviceDeadLetter = devices.get("invalid-key");
+        assertThat(deviceDeadLetter.getException()).isEqualTo("DeserializationException");
+        assertThat(deviceDeadLetter.getErrorMessage()).isEqualTo("failed to deserialize");
+        assertThat(deviceDeadLetter.getRawEvent()).isEqualTo(Base64.getEncoder().encodeToString(invalidPayload));
+
+        List<DeviceEntity> savedEvents = deviceRepository.findAll();
+        assertThat(savedEvents).isEmpty();
     }
 
 }

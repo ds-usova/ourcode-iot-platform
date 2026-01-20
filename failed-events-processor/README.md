@@ -84,27 +84,28 @@ make start-device-collector observability
 
 ### Smoke Test
 
-* Register device-ids-value (Device.avsc) and device-ids-dlt-value (DeviceDeadLetter.avsc) schemas in Schema Registry with Kafka plugin (see src/main/avro)
-* Produce test messages to `device-ids` topic using Kafka plugin or any Kafka producer tool
+* Register events-dlt-value (DeviceEventDeadLetter.avsc) and device-ids-dlt-value (DeviceDeadLetter.avsc) schemas in Schema Registry with Kafka plugin (see src/main/avro)
+* Produce test messages to `device-ids-dlt` topic using Kafka plugin or any Kafka producer tool
 ```json
 {
-  "deviceId" : "\bRrIj/h\u0018hA,;",
-  "deviceType" : {
-    "string" : "\u0002\u0016= .@0j6b"
+  "deviceId": null,
+  "deviceType": null,
+  "createdAt": null,
+  "meta": null,
+  "exception": "DeserializationException",
+  "errorMessage": "failed to deserialize",
+  "rawEvent": {
+    "string": "dGhpcy1tZXNzYWdlLW11c3QtZW5kLXVwLWluLW1pbmlv"
   },
-  "createdAt" : {
-    "long" : 8625999633872044475
-  },
-  "meta" : {
-    "string" : "\u0002\u0016= .@0j6b"
-  }
+  "$$$SchemaName$$$": "org.ourcode.avro.DeviceDeadLetter"
 }
 ```
 
-* Open Device Collector dashboard in [Grafana](http://localhost:3000/dashboards)
-* Verify that "Number of successfully processed devices" is 1
+* Open MinIO UI at [http://localhost:9001](http://localhost:9001)
+* Navigate to `failed-events` bucket
+* Verify that a new object with the following object name is created: 
+    `device-ids-dlt/DeserializationException/{year}/{month}/{day}/{hour}-{minute}-{second}-{uuid}.json`
 
 ### Plans
 
 * Automate schema creation
-* Implement hot sharding rebalancing
