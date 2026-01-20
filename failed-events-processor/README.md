@@ -29,7 +29,7 @@ failed-events-processor/
 ├── architecture/
 │   ├── diagrams/                    # C4 diagrams
 │   │   ├── image/                   # Images generated from PlantUML
-│   │   ├── consume-device-flow.puml
+│   │   ├── consume-device-dlt.puml
 │   │   ├── containers.puml
 │   │   └── context.puml
 │   └── src/main/
@@ -43,6 +43,8 @@ failed-events-processor/
 │       │   ├── application/         # Business logic implementations
 │       │   ├── kafka/               
 │       │   ├── metrics/               
+│       │   ├── minio/               
+│       │   ├── retry/               
 │       │   └── FailedEventsProcessorApplication.java
 │       └── resources/
 └── README.md
@@ -60,26 +62,25 @@ failed-events-processor/
 
 ### Starting the Platform
 
-TODO: updated
-To start local environment with Kafka and PostgreSQL, run:
+To start local environment with Kafka and MinIO, run:
 
 ```bash
 cd ..
-make start-env-device-collector
+make start-env-failed-events-processor
 ```
 
-To start the Device Collector service, run:
+To start the Failed Events Processor service, run:
 
 ```bash
 cd ..
-make start-device-collector
+make start-failed-events-processor
 ```
 
-To start Device Collector with observability tools (Prometheus and Grafana), run:
+To start Failed Events Processor with observability tools (Prometheus and Grafana), run:
 
 ```bash
 cd ..
-make start-device-collector observability
+make start-failed-events-processor observability
 ```
 
 ### Smoke Test

@@ -21,7 +21,7 @@ System_Boundary(system, "Failed Events Processor") {
 ' External containers
 Container_Ext(event_collector, "Event Collector", "Collects IoT events")
 Container_Ext(device_collector, "Device Collector", "Collects IoT devices")
-ContainerDb_Ext(minio, "Object Storage", "MinIO", "Todo add bucket to the description")
+ContainerDb_Ext(minio, "Object Storage", "MinIO", "Bucket failed-events/ \n - device-ids-dlt/* \n - events-dlt/*")
 
 Rel_U(fep, devices_dlt_topic, "Reads failed devices")
 Rel_U(fep, events_dlt_topic, "Reads failed events")
