@@ -88,7 +88,7 @@ public class DeviceEventDeadLetterKafkaConsumer {
             } else {
                 payload.put("eventId", deadLetter.getEventId());
                 payload.put("deviceId", deadLetter.getDeviceId());
-                payload.put("timestamp", deadLetter.getTimestamp().toString()); // Remove L suffix
+                payload.put("timestamp", deadLetter.getTimestamp() != null ? deadLetter.getTimestamp().toString() : null); // Remove L suffix
                 payload.put("type", deadLetter.getType());
                 payload.put("payload", deadLetter.getPayload());
             }
