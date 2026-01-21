@@ -80,7 +80,7 @@ class DeviceEventDeadLetterKafkaConsumerTest {
         doNothing().when(failedEventService).save(any());
         doThrow(new RuntimeException("Failed to save event"))
                 .when(failedEventService)
-                .save(argThat(event -> event.id().equals("event-002")));
+                .save(argThat(event -> event.payload().contains("event-002")));
 
         // When: processing the batch
         // Then: RuntimeException is thrown and acknowledge is NOT called

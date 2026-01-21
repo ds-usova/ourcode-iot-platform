@@ -72,7 +72,7 @@ public class DeviceEventDeadLetterKafkaConsumer {
 
     private FailedEvent toDomain(DeviceEventDeadLetter deadLetter, long timestamp) {
         return new FailedEvent(
-                deadLetter.getEventId() == null ? UUID.randomUUID().toString() : deadLetter.getEventId(),
+                UUID.randomUUID().toString(),
                 kafkaTopics.eventsDlt(),
                 deadLetter.getException(),
                 generatePayload(deadLetter),
