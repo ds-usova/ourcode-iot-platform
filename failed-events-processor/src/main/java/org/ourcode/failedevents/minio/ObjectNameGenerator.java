@@ -1,7 +1,6 @@
 package org.ourcode.failedevents.minio;
 
 import org.ourcode.failedevents.api.model.FailedEvent;
-import org.ourcode.failedevents.api.service.Constants;
 import org.springframework.stereotype.Component;
 
 import java.time.ZoneOffset;
@@ -9,6 +8,10 @@ import java.time.ZonedDateTime;
 
 @Component
 public class ObjectNameGenerator {
+
+    private static final String NOT_ALLOWED_CHARACTERS = "[^a-zA-Z0-9._-]";
+    private static final String REPLACEMENT_CHAR = "_";
+    private static final String HIERARCHY_SEPARATOR = "/";
 
     public String toObjectName(FailedEvent failedEvent, String extension) {
         ZonedDateTime date = failedEvent.timestamp().atZone(ZoneOffset.UTC);
@@ -18,13 +21,17 @@ public class ObjectNameGenerator {
                 date.getSecond()
         );
 
-        return String.join(Constants.HIERARCHY_SEPARATOR,
-                failedEvent.origin(),
-                failedEvent.type(),
+        String origin = failedEvent.origin().replaceAll(NOT_ALLOWED_CHARACTERS, REPLACEMENT_CHAR);
+        String type = failedEvent.type().replaceAll(NOT_ALLOWED_CHARACTERS, REPLACEMENT_CHAR);
+        String id = failedEvent.id().replaceAll(NOT_ALLOWED_CHARACTERS, REPLACEMENT_CHAR);
+
+        return String.join(HIERARCHY_SEPARATOR,
+                origin,
+                type,
                 "" + date.getYear(),
                 "" + date.getMonthValue(),
                 "" + date.getDayOfMonth(),
-                time + "-" + failedEvent.id() + "." + extension
+                time + "-" + id + "." + extension
         );
     }
 
