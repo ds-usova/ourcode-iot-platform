@@ -1,0 +1,91 @@
+package org.ourcode.failedevents.minio;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.annotation.Timed;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import lombok.extern.slf4j.Slf4j;
+import org.ourcode.failedevents.api.exception.FailedEventStorageException;
+import org.ourcode.failedevents.api.gateway.FailedEventGateway;
+import org.ourcode.failedevents.api.model.FailedEvent;
+import org.ourcode.failedevents.minio.configuration.MinioProperties;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.stereotype.Component;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
+@Slf4j
+@Component
+@Retryable(
+        maxAttemptsExpression = "${spring.retry.minio-gateway.max-attempts}",
+        backoff = @Backoff(delayExpression = "${spring.retry.minio-gateway.backoff-delay}")
+)
+public class MinioFailedEventGateway implements FailedEventGateway {
+
+    private static final String JSON_CONTENT_TYPE = "application/json";
+    private static final String TEXT_CONTENT_TYPE = "text/plain";
+
+    private final MinioClient minioClient;
+    private final MinioProperties minioProperties;
+    private final ObjectNameGenerator objectNameGenerator;
+    private final ObjectMapper objectMapper;
+
+    public MinioFailedEventGateway(
+            MinioClient minioClient,
+            MinioProperties minioProperties,
+            ObjectNameGenerator objectNameGenerator,
+            ObjectMapper objectMapper
+    ) {
+        this.minioClient = minioClient;
+        this.minioProperties = minioProperties;
+        this.objectNameGenerator = objectNameGenerator;
+        this.objectMapper = objectMapper;
+    }
+
+    @Override
+    @Timed(value = "failed.event.put.time", description = "Time taken to put failed event to MinIO")
+    public void save(FailedEvent failedEvent) {
+        boolean isValidJson = isValidJson(failedEvent.payload());
+
+        String contentType = isValidJson ? JSON_CONTENT_TYPE : TEXT_CONTENT_TYPE;
+        String extension = isValidJson ? "json" : "txt";
+        byte[] data = failedEvent.payload().getBytes(StandardCharsets.UTF_8);
+
+        String objectName = objectNameGenerator.toObjectName(failedEvent, extension);
+
+        try {
+            log.debug("Uploading object to MinIO: {}", objectName);
+
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(minioProperties.bucket())
+                            .object(objectName)
+                            .stream(new ByteArrayInputStream(data), data.length, -1)
+                            .contentType(contentType)
+                            .build()
+            );
+
+            log.debug("Successfully uploaded object to MinIO: {}", objectName);
+        } catch (Exception e) {
+            log.error("Failed to upload object to MinIO: {}", objectName, e);
+            throw new FailedEventStorageException(e.getMessage(), e);
+        }
+    }
+
+    private boolean isValidJson(String payload) {
+        if (payload == null || payload.isBlank()) {
+            return false;
+        }
+
+        try {
+            objectMapper.readTree(payload);
+            return true;
+        } catch (Exception e) {
+            log.debug("Payload is not valid JSON: {}", e.getMessage());
+            return false;
+        }
+    }
+
+}

@@ -1,0 +1,74 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: failed-events-processor
+  threads:
+    virtual:
+      enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    admin:
+      auto-create: false
+    consumer:
+      auto-offset-reset: latest
+      group-id: device-collector-group
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      backoff-interval: 1000
+      concurrency: 1
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8086}
+        specific.avro.reader: true
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
+        heartbeat.interval.ms: 3000
+        max.poll.records: 100
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      retries: 5
+      retry-backoff-ms: 1000
+      acks: all
+      properties:
+        schema.registry.url: ${SCHEMA_REGISTRY_URL:http://localhost:8086}
+  retry:
+    minio-gateway:
+      max-attempts: 3
+      backoff-delay: 500
+
+app:
+  kafka:
+    topics:
+      events-dlt: events-dlt
+      device-ids-dlt: device-ids-dlt
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:our_code_minio_user}
+    secret-key: ${MINIO_SECRET_KEY:our_code_minio_password}
+    bucket: ${MINIO_BUCKET:failed-events}
+    auto-create-bucket: ${MINIO_AUTO_CREATE_BUCKET:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState, ping
+        readiness:
+          include: readinessState, kafka, minio

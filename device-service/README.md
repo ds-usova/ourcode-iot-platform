@@ -66,7 +66,7 @@ When running the service inside Docker container, DEVICE_SERVICE_API_PROTECTED e
 
 - Git
 - Docker
-- Create Artifactory repository (see README in root folder)
+- Run Nexus (see README in root folder)
 - (Optional) Switch to Linux terminal to run make commands if you're on Windows
 
 ### Starting the Platform

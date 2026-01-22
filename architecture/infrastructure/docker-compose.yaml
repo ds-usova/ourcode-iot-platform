@@ -233,6 +233,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_PROMETHEUS_AUTH_TYPE: "public"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -536,6 +537,7 @@ services:
 
   avro-schemas:
     image: avro-schemas:latest
+    container_name: avro-schemas
     build:
       context: ./../../avro-schemas
       network: host
@@ -564,6 +566,8 @@ services:
       network: host
       args:
         NEXUS_HOST: nexus:8081
+        NEXUS_ADMIN: ${NEXUS_ADMIN}
+        NEXUS_PASSWORD: ${NEXUS_PASSWORD}
     networks:
       - backend
     depends_on:
@@ -617,6 +621,8 @@ services:
       network: host
       args:
         NEXUS_HOST: nexus:8081
+        NEXUS_ADMIN: ${NEXUS_ADMIN}
+        NEXUS_PASSWORD: ${NEXUS_PASSWORD}
     networks:
       - backend
     depends_on:
@@ -656,6 +662,40 @@ services:
       SHARD_1_REPLICA_USER: ${POSTGRES_USER}
       SHARD_1_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
       SHARD_1_REPLICA_CONNECTION_TIMEOUT: 5000
+
+  failed-events-processor:
+      image: failed-events-processor:latest
+      container_name: failed-events-processor
+      ports:
+          - "8093:8090"
+      build:
+        context: ./../../failed-events-processor
+        network: host
+        args:
+          NEXUS_HOST: nexus:8081
+          NEXUS_ADMIN: ${NEXUS_ADMIN}
+          NEXUS_PASSWORD: ${NEXUS_PASSWORD}
+      networks:
+          - backend
+      depends_on:
+        nexus:
+          condition: service_healthy
+        kafka:
+          condition: service_healthy
+        kafka-init:
+          condition: service_completed_successfully
+        schema-registry:
+          condition: service_started
+        minio:
+          condition: service_healthy
+      environment:
+        KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+        SCHEMA_REGISTRY_URL: http://schema-registry:8081
+        MINIO_ENDPOINT: http://minio:9000
+        MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+        MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+        MINIO_BUCKET: failed-events
+        MINIO_AUTO_CREATE_BUCKET: true
 
 volumes:
   postgres_data:

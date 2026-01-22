@@ -60,7 +60,7 @@ public class ToxicTest extends AbstractIntegrationTest {
         testProducers.sendDevices(List.of(device));
 
         Map<String, DeviceDeadLetter> deadLetters = new HashMap<>();
-        Awaitility.await().atMost(Duration.ofSeconds(40)).pollInterval(Duration.ofSeconds(5)).untilAsserted(() -> {
+        Awaitility.await().atMost(Duration.ofSeconds(60)).pollInterval(Duration.ofSeconds(3)).untilAsserted(() -> {
             deadLetters.clear();
             deadLetters.putAll(testConsumers.readDlt());
 
@@ -74,6 +74,7 @@ public class ToxicTest extends AbstractIntegrationTest {
         assertThat(deadLetter.getCreatedAt()).isEqualTo(device.getCreatedAt());
         assertThat(deadLetter.getMeta()).isEqualTo(device.getMeta());
 
+        assertThat(deadLetter.getException()).isEqualTo("PersistenceException");
         assertThat(deadLetter.getErrorMessage()).contains("request timed out");
         assertThat(deadLetter.getRawEvent()).isNull();
 

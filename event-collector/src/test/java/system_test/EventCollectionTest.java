@@ -104,9 +104,15 @@ public class EventCollectionTest extends AbstractIntegrationTest {
         Awaitility.await().atMost(Duration.ofSeconds(5)).pollInterval(Duration.ofSeconds(1)).untilAsserted(() -> {
             Map<String, DeviceEventDeadLetter> devices = testConsumers.readDlt();
             assertThat(devices).withFailMessage("Expected exactly one event in DLT").hasSize(1);
+
+            log.debug("DLT devices: {}", devices);
+
             assertThat(devices.containsKey("invalid-key")).isTrue();
-            assertThat(devices.get("invalid-key").getErrorMessage()).isEqualTo("failed to deserialize");
-            assertThat(devices.get("invalid-key").getRawEvent()).isEqualTo(Base64.getEncoder().encodeToString(invalidPayload));
+
+            DeviceEventDeadLetter deadLetter = devices.get("invalid-key");
+            assertThat(deadLetter.getException()).isEqualTo("DeserializationException");
+            assertThat(deadLetter.getErrorMessage()).isEqualTo("failed to deserialize");
+            assertThat(deadLetter.getRawEvent()).isEqualTo(Base64.getEncoder().encodeToString(invalidPayload));
 
             List<DeviceEventEntity> savedEvents = deviceEventRepository.findAll();
             assertThat(savedEvents).isEmpty();

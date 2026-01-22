@@ -1077,8 +1077,7 @@
   "preload": false,
   "schemaVersion": 41,
   "tags": [
-    "device-service",
-    "performance"
+    "device-service"
   ],
   "templating": {
     "list": []

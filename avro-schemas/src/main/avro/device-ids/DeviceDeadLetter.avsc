@@ -7,6 +7,7 @@
     { "name": "deviceType", "type": ["null", "string"], "default": null },
     { "name": "createdAt", "type": ["null", "long"], "default": null },
     { "name": "meta", "type": ["null", "string"], "default": null },
+    { "name": "exception", "type":  "string" },
     { "name": "errorMessage", "type": "string" },
     { "name": "rawEvent", "type": ["null", "string"], "default": null }
   ]
