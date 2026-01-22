@@ -1,6 +1,7 @@
 package org.ourcode.failedevents.minio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.annotation.Timed;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class MinioFailedEventGateway implements FailedEventGateway {
     }
 
     @Override
+    @Timed(value = "failed.event.put.time", description = "Time taken to put failed event to MinIO")
     public void save(FailedEvent failedEvent) {
         boolean isValidJson = isValidJson(failedEvent.payload());
         String contentType = isValidJson(failedEvent.payload()) ? JSON_CONTENT_TYPE : TEXT_CONTENT_TYPE;

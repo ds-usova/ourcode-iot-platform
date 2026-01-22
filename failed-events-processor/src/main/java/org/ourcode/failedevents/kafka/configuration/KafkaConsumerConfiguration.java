@@ -13,6 +13,8 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +42,9 @@ public class KafkaConsumerConfiguration {
 
     @Value("${spring.kafka.consumer.properties.max.poll.records}")
     private int maxPollRecords;
+
+    @Value("${spring.kafka.consumer.backoff-interval}")
+    private long backoffInterval;
 
     // ====================================================================================================
     // DeviceDeadLetter Topic Configuration
@@ -70,6 +75,10 @@ public class KafkaConsumerConfiguration {
         factory.setConcurrency(listenerConcurrency);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         factory.setBatchListener(true);
+
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(new FixedBackOff(backoffInterval, Long.MAX_VALUE));
+        factory.setCommonErrorHandler(errorHandler);
+
         return factory;
     }
 
@@ -102,6 +111,10 @@ public class KafkaConsumerConfiguration {
         factory.setConcurrency(listenerConcurrency);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         factory.setBatchListener(true);
+
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(new FixedBackOff(backoffInterval, Long.MAX_VALUE));
+        factory.setCommonErrorHandler(errorHandler);
+
         return factory;
     }
 
