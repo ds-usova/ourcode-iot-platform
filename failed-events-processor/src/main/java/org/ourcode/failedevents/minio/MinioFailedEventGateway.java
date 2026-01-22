@@ -14,6 +14,7 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
@@ -49,7 +50,7 @@ public class MinioFailedEventGateway implements FailedEventGateway {
         boolean isValidJson = isValidJson(failedEvent.payload());
         String contentType = isValidJson(failedEvent.payload()) ? JSON_CONTENT_TYPE : TEXT_CONTENT_TYPE;
         String extension = isValidJson ? "json" : "txt";
-        byte[] data = failedEvent.payload().getBytes();
+        byte[] data = failedEvent.payload().getBytes(StandardCharsets.UTF_8);
 
         String objectName = objectNameGenerator.toObjectName(failedEvent, extension);
 
