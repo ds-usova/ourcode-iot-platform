@@ -88,7 +88,7 @@ public class DeviceDeadLetterKafkaConsumer {
             } else {
                 payload.put("deviceId", deadLetter.getDeviceId());
                 payload.put("deviceType", deadLetter.getDeviceType());
-                payload.put("createdAt", deadLetter.getCreatedAt().toString()); // Remove L suffix
+                payload.put("createdAt", deadLetter.getCreatedAt() == null ? null : deadLetter.getCreatedAt().toString()); // Remove L suffix
                 payload.put("meta", deadLetter.getMeta());
             }
 
