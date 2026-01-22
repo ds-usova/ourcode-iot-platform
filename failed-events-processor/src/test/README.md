@@ -37,25 +37,22 @@ test/
 │   │       ├── KafkaContainer.java
 │   │       ├── MinioContainer.java
 │   │       ├── Network.java
-│   │       ├── SchemaRegistryContainer.java
-│   │       └── ToxiproxyContainer.java
+│   │       └── SchemaRegistryContainer.java
 │   │
 │   ├── integration/                            # Integration tests
-│   │   ├── health/
-│   │   │   ├── KafkaHealthIntegrationTest.java
-│   │   │   └── MinioHealthIntegrationTest.java
-│   │   └── minio/
-│   │       └── MinioFailedEventGatewayIntegrationTest.java  
+│   │   ├── health/                             # Health check integration tests
+│   │   ├── minio/                              # MinIO gateway integration tests
+│   │   └── ...
 │   │
 │   ├── org/ourcode/failedevents/               # Unit tests (mirror src structure)
-│   │   └── minio/
-│   │       ├── MinioFailedEventGatewayUnitTest.java
-│   │       └── ObjectNameGeneratorTest.java        
+│   │   ├── kafka/consumer/                     # Kafka consumer unit tests
+│   │   ├── minio/                              # MinIO gateway unit tests
+│   │   └── ...
 │   │
 │   └── system_test/                            # End-to-end system tests
 │       ├── DeviceDltCollectionTest.java
 │       ├── EventDltCollectionTest.java
-│       └── ToxicTest.java
+│       └── ...
 │
 └── resources/
     ├── application-test.yaml                   # Test configuration
@@ -283,7 +280,6 @@ Tests use the following test containers (test/java/common/containers/):
 | MinIO           | Object storage             |
 | Kafka           | Message broker             |
 | Schema Registry | Avro schemas               |
-| Toxiproxy       | Network failure simulation |
 
 ### Container Lifecycle
 

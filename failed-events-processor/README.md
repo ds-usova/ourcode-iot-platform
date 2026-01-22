@@ -27,26 +27,32 @@ The service consists of the following components:
 ```plaintext
 failed-events-processor/
 ├── architecture/
-│   ├── diagrams/                    # C4 diagrams
-│   │   ├── image/                   # Images generated from PlantUML
-│   │   ├── consume-device-dlt.puml
-│   │   ├── containers.puml
-│   │   └── context.puml
-│   └── src/main/
-│       ├── java/
-│       │   ├── api/                 # Service API (doesn't depend on any other layers)
-│       │   │   ├── events/          # Application events
-│       │   │   ├── exception/
-│       │   │   ├── gateway/         # Gateway interfaces (data providers/consumers)
-│       │   │   ├── model/           # Model classes
-│       │   │   └── service/         # Business logic interfaces
-│       │   ├── application/         # Business logic implementations
-│       │   ├── kafka/               
-│       │   ├── metrics/               
-│       │   ├── minio/               
-│       │   ├── retry/               
-│       │   └── FailedEventsProcessorApplication.java
-│       └── resources/
+│   └── diagrams/                    # C4 diagrams
+│       ├── image/                   # Images generated from PlantUML
+│       ├── consume-device-dlt.puml
+│       ├── containers.puml
+│       └── context.puml
+├── src/main/
+│   ├── java/
+│   │   └── org/ourcode/failedevents/
+│   │       ├── api/                 # Service API (doesn't depend on any other layers)
+│   │       │   ├── exception/
+│   │       │   ├── gateway/         # Gateway interfaces (data providers/consumers)
+│   │       │   ├── model/           # Model classes
+│   │       │   └── service/         # Business logic interfaces
+│   │       ├── application/         # Business logic implementations
+│   │       ├── kafka/               
+│   │       │   ├── configuration/
+│   │       │   ├── consumer/
+│   │       │   ├── health/
+│   │       │   └── producer/
+│   │       ├── metrics/               
+│   │       ├── minio/
+│   │       │   ├── configuration/
+│   │       │   └── health/
+│   │       ├── retry/               
+│   │       └── FailedEventsProcessorApplication.java
+│   └── resources/
 └── README.md
 ```
 

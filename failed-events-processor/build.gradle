@@ -87,11 +87,6 @@ tasks.withType(JavaCompile).configureEach {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
-
-    testLogging {
-        events "failed"
-        showStandardStreams = true
-    }
 }
 
 jacoco {

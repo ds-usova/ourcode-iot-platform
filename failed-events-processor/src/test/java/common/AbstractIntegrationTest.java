@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import common.containers.KafkaContainer;
 import common.containers.MinioContainer;
 import common.containers.SchemaRegistryContainer;
-import common.containers.ToxiproxyContainer;
 import io.minio.MinioClient;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +47,6 @@ public abstract class AbstractIntegrationTest {
 
         log.info("Kafka is running: {}", KafkaContainer.CONTAINER.isRunning());
         log.info("Schema Registry is running: {}", SchemaRegistryContainer.CONTAINER.isRunning());
-
-        log.info("Toxi proxy is running: {}", ToxiproxyContainer.CONTAINER.isRunning());
     }
 
     protected static void setProperties(DynamicPropertyRegistry registry) {
