@@ -48,7 +48,8 @@ public class MinioFailedEventGateway implements FailedEventGateway {
     @Timed(value = "failed.event.put.time", description = "Time taken to put failed event to MinIO")
     public void save(FailedEvent failedEvent) {
         boolean isValidJson = isValidJson(failedEvent.payload());
-        String contentType = isValidJson(failedEvent.payload()) ? JSON_CONTENT_TYPE : TEXT_CONTENT_TYPE;
+
+        String contentType = isValidJson ? JSON_CONTENT_TYPE : TEXT_CONTENT_TYPE;
         String extension = isValidJson ? "json" : "txt";
         byte[] data = failedEvent.payload().getBytes(StandardCharsets.UTF_8);
 
