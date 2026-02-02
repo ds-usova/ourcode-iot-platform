@@ -1,0 +1,8 @@
+### Send Command to Specific Router
+GRPC localhost:50051/api.v1.RouterService/SendCommand
+
+{
+  "router_id": "123e4567-e89b-12d3-a456-426614174000",
+  "command_type": "REBOOT",
+  "payload": "{\"reason\": \"scheduled maintenance\", \"delay_seconds\": 30}"
+}

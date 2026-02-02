@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package api.v1;
+
+option go_package = "router-manager/proto/api/v1";
+
+service RouterService {
+  rpc SendCommand(SendCommandRequest) returns (SendCommandResponse);
+}
+
+message SendCommandRequest {
+  optional string router_id = 1;   // UUID or null for all routers
+  string command_type = 2;         // e.g., "REBOOT"
+  string payload = 3;              // JSON payload as string
+}
+
+message SendCommandResponse {
+  bool success = 1;
+  string message = 2;
+  int32 routers_affected = 3;
+}
