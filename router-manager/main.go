@@ -30,6 +30,8 @@ func main() {
 	log.Println("========================================")
 	log.Println("Available endpoints:")
 	log.Println("  POST /api.v1.RouterService/SendCommand")
+	log.Println("  POST /api.v1.RouterService/PollOutstandingCommands")
+	log.Println("  POST /api.v1.RouterService/AcknowledgeCommand")
 	log.Println("========================================")
 	log.Println("Waiting for requests...")
 

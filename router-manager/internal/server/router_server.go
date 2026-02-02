@@ -48,7 +48,7 @@ func (s *RouterServer) PollOutstandingCommands(_ context.Context, req *pb.PollOu
 	log.Println("=========================================")
 
 	command := &pb.Command{
-		CommandId:   "cmd-12345",
+		CommandId:   "dec31cb2-0959-41d7-8194-bfe59ba4acb1",
 		CommandType: "RESTART",
 		Payload:     "Please restart the router.",
 	}
@@ -58,6 +58,23 @@ func (s *RouterServer) PollOutstandingCommands(_ context.Context, req *pb.PollOu
 	}
 
 	log.Printf("Sending response with %d commands", len(response.Commands))
+
+	return response, nil
+}
+
+func (s *RouterServer) AcknowledgeCommand(_ context.Context, req *pb.AcknowledgeCommandRequest) (*pb.AcknowledgeCommandResponse, error) {
+	log.Printf("=========================================")
+	log.Println("Received AcknowledgeCommand request:")
+	log.Printf("  Router ID: %s", req.GetRouterId())
+	log.Printf("  Command ID: %s", req.GetCommandId())
+	log.Println("=========================================")
+
+	response := &pb.AcknowledgeCommandResponse{
+		Success: true,
+		Message: "Command acknowledged successfully.",
+	}
+
+	log.Printf("Sending response: Success=%v, Message='%s'", response.Success, response.Message)
 
 	return response, nil
 }

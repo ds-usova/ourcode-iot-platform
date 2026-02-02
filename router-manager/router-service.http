@@ -13,3 +13,11 @@ GRPC localhost:50051/api.v1.RouterService/PollOutstandingCommands
 {
   "router_id": "123e4567-e89b-12d3-a456-426614174000"
 }
+
+### Acknowledge Command Completion
+GRPC localhost:50051/api.v1.RouterService/AcknowledgeCommand
+
+{
+  "router_id": "123e4567-e89b-12d3-a456-426614174000",
+  "command_id": "dec31cb2-0959-41d7-8194-bfe59ba4acb1"
+}
