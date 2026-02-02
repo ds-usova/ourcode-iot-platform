@@ -17,5 +17,4 @@ message SendCommandRequest {
 message SendCommandResponse {
   bool success = 1;
   string message = 2;
-  int32 routers_affected = 3;
 }
