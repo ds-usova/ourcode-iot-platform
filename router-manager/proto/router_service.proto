@@ -6,8 +6,10 @@ option go_package = "router-manager/proto/api/v1";
 
 service RouterService {
   rpc SendCommand(SendCommandRequest) returns (SendCommandResponse);
+  rpc PollOutstandingCommands(PollOutstandingCommandsRequest) returns (PollOutstandingCommandsResponse);
 }
 
+// Send command messages
 message SendCommandRequest {
   optional string router_id = 1;   // UUID or null for all routers
   string command_type = 2;         // e.g., "REBOOT"
@@ -17,4 +19,19 @@ message SendCommandRequest {
 message SendCommandResponse {
   bool success = 1;
   string message = 2;
+}
+
+// Poll outstanding commands messages
+message PollOutstandingCommandsRequest {
+  string router_id = 1;   // UUID of the router
+}
+
+message PollOutstandingCommandsResponse {
+  repeated Command commands = 1;
+}
+
+message Command {
+  string command_id = 1;        // UUID of the command
+  string command_type = 2;      // e.g., "REBOOT"
+  string payload = 3;           // JSON payload as string
 }

@@ -6,3 +6,10 @@ GRPC localhost:50051/api.v1.RouterService/SendCommand
   "command_type": "REBOOT",
   "payload": "{\"reason\": \"scheduled maintenance\", \"delay_seconds\": 30}"
 }
+
+### Poll Outstanding Commands for a Router
+GRPC localhost:50051/api.v1.RouterService/PollOutstandingCommands
+
+{
+  "router_id": "123e4567-e89b-12d3-a456-426614174000"
+}

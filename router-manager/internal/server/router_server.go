@@ -40,3 +40,24 @@ func (s *RouterServer) SendCommand(_ context.Context, req *pb.SendCommandRequest
 
 	return response, nil
 }
+
+func (s *RouterServer) PollOutstandingCommands(_ context.Context, req *pb.PollOutstandingCommandsRequest) (*pb.PollOutstandingCommandsResponse, error) {
+	log.Printf("=========================================")
+	log.Println("Received PollOutstandingCommands request:")
+	log.Printf("  Router ID: %s", req.GetRouterId())
+	log.Println("=========================================")
+
+	command := &pb.Command{
+		CommandId:   "cmd-12345",
+		CommandType: "RESTART",
+		Payload:     "Please restart the router.",
+	}
+
+	response := &pb.PollOutstandingCommandsResponse{
+		Commands: []*pb.Command{command},
+	}
+
+	log.Printf("Sending response with %d commands", len(response.Commands))
+
+	return response, nil
+}
