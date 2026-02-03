@@ -47,6 +47,10 @@ services:
       CAMUNDA_DB_USER: ${CAMUNDA_DB_USER}
       CAMUNDA_DB_PASSWORD: ${CAMUNDA_DB_PASSWORD}
       CAMUNDA_DB_SCHEMA: ${CAMUNDA_DB_SCHEMA}
+      # Router Manager database configuration
+      ROUTER_MANAGER_DB_USER: ${ROUTER_MANAGER_DB_USER}
+      ROUTER_MANAGER_DB_PASSWORD: ${ROUTER_MANAGER_DB_PASSWORD}
+      ROUTER_MANAGER_DB_SCHEMA: ${ROUTER_MANAGER_DB_SCHEMA}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init-postgres.sh:/docker-entrypoint-initdb.d/init-db.sh
