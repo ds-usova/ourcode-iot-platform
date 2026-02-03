@@ -55,6 +55,25 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init-postgres.sh:/docker-entrypoint-initdb.d/init-db.sh
 
+  flyway-router:
+    image: flyway/flyway:12.0-alpine
+    container_name: flyway
+    command: -connectRetries=60 -baselineOnMigrate=true migrate
+    volumes:
+      - ./db/migrations/router:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB_NAME}?currentSchema=${ROUTER_MANAGER_DB_SCHEMA}
+      FLYWAY_USER: ${ROUTER_MANAGER_DB_USER}
+      FLYWAY_PASSWORD: ${ROUTER_MANAGER_DB_PASSWORD}
+      FLYWAY_SCHEMAS: ${ROUTER_MANAGER_DB_SCHEMA}
+      FLYWAY_BASELINE_VERSION: 0
+      FLYWAY_BASELINE_DESCRIPTION: Initial baseline
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres_shard_0:
     <<: *postgres-base
     container_name: postgres_shard_0
