@@ -28,7 +28,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	routerServer := server.NewRouterServer()
+	routerServer := server.NewRouterServer(db)
 	pb.RegisterRouterServiceServer(grpcServer, routerServer)
 
 	log.Println("========================================")

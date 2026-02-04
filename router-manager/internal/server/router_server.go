@@ -2,19 +2,26 @@ package server
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
+	"router-manager/internal/database"
 	pb "router-manager/proto"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type RouterServer struct {
 	pb.UnimplementedRouterServiceServer
+	db *database.DB
 }
 
-func NewRouterServer() *RouterServer {
-	return &RouterServer{}
+func NewRouterServer(db *database.DB) *RouterServer {
+	return &RouterServer{db: db}
 }
 
-func (s *RouterServer) SendCommand(_ context.Context, req *pb.SendCommandRequest) (*pb.SendCommandResponse, error) {
+func (s *RouterServer) SendCommand(ctx context.Context, req *pb.SendCommandRequest) (*pb.SendCommandResponse, error) {
 	log.Println("========================================")
 	log.Println("Received SendCommand request:")
 
@@ -29,16 +36,25 @@ func (s *RouterServer) SendCommand(_ context.Context, req *pb.SendCommandRequest
 	log.Printf("  Payload: %s", req.GetPayload())
 	log.Println("========================================")
 
-	var message = "Command sent to router " + routerID
-
-	response := &pb.SendCommandResponse{
-		Success: true,
-		Message: message,
+	if routerID == "" {
+		return &pb.SendCommandResponse{
+			CommandId: "",
+			Message:   "Command sent to all routers",
+		}, nil
 	}
 
-	log.Printf("Sending response: Success=%v, Message='%s'", response.Success, response.Message)
+	cmd, err := s.db.CreateCommand(ctx, routerID, req.GetCommandType(), req.GetPayload())
+	if err != nil {
+		if errors.Is(err, database.ErrRouterNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "router not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
-	return response, nil
+	return &pb.SendCommandResponse{
+		CommandId: cmd.Id,
+		Message:   fmt.Sprintf("Command sent to router %s", routerID),
+	}, nil
 }
 
 func (s *RouterServer) PollOutstandingCommands(_ context.Context, req *pb.PollOutstandingCommandsRequest) (*pb.PollOutstandingCommandsResponse, error) {
