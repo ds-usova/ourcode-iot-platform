@@ -65,24 +65,31 @@ func (s *RouterServer) SendCommand(ctx context.Context, req *pb.SendCommandReque
 	}, nil
 }
 
-func (s *RouterServer) PollOutstandingCommands(_ context.Context, req *pb.PollOutstandingCommandsRequest) (*pb.PollOutstandingCommandsResponse, error) {
+func (s *RouterServer) PollOutstandingCommands(ctx context.Context, req *pb.PollOutstandingCommandsRequest) (*pb.PollOutstandingCommandsResponse, error) {
 	log.Printf("=========================================")
 	log.Println("Received PollOutstandingCommands request:")
 	log.Printf("  Router ID: %s", req.GetRouterId())
 	log.Println("=========================================")
 
-	command := &pb.Command{
-		CommandId:   "dec31cb2-0959-41d7-8194-bfe59ba4acb1",
-		CommandType: "RESTART",
-		Payload:     "Please restart the router.",
+	commands, err := s.db.GetOutstandingCommands(ctx, req.GetRouterId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	grpcCommands := make([]*pb.Command, len(commands))
+	for i, cmd := range commands {
+		grpcCommands[i] = &pb.Command{
+			CommandId:   cmd.Id,
+			CommandType: cmd.CommandType,
+			Payload:     cmd.Payload,
+		}
 	}
 
 	response := &pb.PollOutstandingCommandsResponse{
-		Commands: []*pb.Command{command},
+		Commands: grpcCommands,
 	}
 
 	log.Printf("Sending response with %d commands", len(response.Commands))
-
 	return response, nil
 }
 

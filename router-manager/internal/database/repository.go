@@ -109,3 +109,37 @@ func (db *DB) BroadcastCommand(ctx context.Context, commandType, payload string)
 	log.Printf("Broadcasted command to %d routers: %s", rowsAffected, commandType)
 	return rowsAffected, nil
 }
+
+func (db *DB) GetOutstandingCommands(ctx context.Context, routerID string) ([]Command, error) {
+	query := `
+ 		SELECT id, command_type, payload
+		FROM commands
+ 		WHERE router_id = $1 AND status IN ('PENDING', 'SENT')
+		ORDER BY created_at
+	`
+
+	rows, err := db.Pool.Query(ctx, query, routerID)
+	if err != nil {
+		log.Printf("Error querying outstanding commands: %v", err)
+		return nil, fmt.Errorf("failed to query outstanding commands: %w", err)
+	}
+	defer rows.Close()
+
+	var commands []Command
+	for rows.Next() {
+		var cmd Command
+		err := rows.Scan(&cmd.Id, &cmd.CommandType, &cmd.Payload)
+		if err != nil {
+			log.Printf("Error scanning command row: %v", err)
+			return nil, fmt.Errorf("failed to scan command row: %w", err)
+		}
+		commands = append(commands, cmd)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("Error iterating command rows: %v", err)
+		return nil, fmt.Errorf("error iterating command rows: %w", err)
+	}
+
+	return commands, nil
+}
