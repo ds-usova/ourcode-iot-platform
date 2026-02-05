@@ -22,7 +22,8 @@ type Command struct {
 }
 
 var (
-	ErrRouterNotFound = fmt.Errorf("router not found")
+	ErrRouterNotFound      = fmt.Errorf("router not found")
+	ErrSentCommandNotFound = fmt.Errorf("sent command not found")
 )
 
 // CreateCommand inserts a new command into the database for a specific router.
@@ -111,35 +112,80 @@ func (db *DB) BroadcastCommand(ctx context.Context, commandType, payload string)
 }
 
 func (db *DB) GetOutstandingCommands(ctx context.Context, routerID string) ([]Command, error) {
-	query := `
- 		SELECT id, command_type, payload
-		FROM commands
- 		WHERE router_id = $1 AND status IN ('PENDING', 'SENT')
-		ORDER BY created_at
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	updateQuery := `
+		UPDATE commands
+		SET status = 'SENT', sent_at = NOW()
+		WHERE router_id = $1 AND status IN ('PENDING', 'SENT')
+		RETURNING id, command_type, payload
 	`
 
-	rows, err := db.Pool.Query(ctx, query, routerID)
+	rows, err := tx.Query(ctx, updateQuery, routerID)
 	if err != nil {
 		log.Printf("Error querying outstanding commands: %v", err)
 		return nil, fmt.Errorf("failed to query outstanding commands: %w", err)
 	}
-	defer rows.Close()
 
 	var commands []Command
 	for rows.Next() {
 		var cmd Command
 		err := rows.Scan(&cmd.Id, &cmd.CommandType, &cmd.Payload)
 		if err != nil {
+			rows.Close()
 			log.Printf("Error scanning command row: %v", err)
 			return nil, fmt.Errorf("failed to scan command row: %w", err)
 		}
 		commands = append(commands, cmd)
 	}
+	rows.Close()
 
 	if err := rows.Err(); err != nil {
 		log.Printf("Error iterating command rows: %v", err)
 		return nil, fmt.Errorf("error iterating command rows: %w", err)
 	}
 
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return commands, nil
+}
+
+func (db *DB) AcknowledgeCommand(ctx context.Context, commandID string, routerID string) error {
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	query := `
+		UPDATE commands
+		SET status = 'ACKED', acked_at = NOW()
+		WHERE id = $1 AND router_id = $2 AND status = 'SENT'
+	`
+
+	cmdTag, err := tx.Exec(ctx, query, commandID, routerID)
+	if err != nil {
+		log.Printf("Error acknowledging command: %v", err)
+		return fmt.Errorf("failed to acknowledge command: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		log.Printf("Warning: No command found with ID %s to acknowledge", commandID)
+		return ErrSentCommandNotFound
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Acknowledged command with ID %s", commandID)
+	return nil
 }

@@ -44,6 +44,5 @@ message AcknowledgeCommandRequest {
 }
 
 message AcknowledgeCommandResponse {
-  bool success = 1;
-  string message = 2;
+  string message = 1;
 }

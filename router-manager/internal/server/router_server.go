@@ -100,12 +100,18 @@ func (s *RouterServer) AcknowledgeCommand(_ context.Context, req *pb.Acknowledge
 	log.Printf("  Command ID: %s", req.GetCommandId())
 	log.Println("=========================================")
 
+	err := s.db.AcknowledgeCommand(context.Background(), req.GetCommandId(), req.GetRouterId())
+	if err != nil {
+		if errors.Is(err, database.ErrSentCommandNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "sent command not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	response := &pb.AcknowledgeCommandResponse{
-		Success: true,
 		Message: "Command acknowledged successfully.",
 	}
 
-	log.Printf("Sending response: Success=%v, Message='%s'", response.Success, response.Message)
-
+	log.Printf("Acknowledged command %s for router %s", req.GetCommandId(), req.GetRouterId())
 	return response, nil
 }
