@@ -37,9 +37,17 @@ func (s *RouterServer) SendCommand(ctx context.Context, req *pb.SendCommandReque
 	log.Println("========================================")
 
 	if routerID == "" {
+		count, err := s.db.BroadcastCommand(ctx, req.GetCommandType(), req.GetPayload())
+		if err != nil {
+			if errors.Is(err, database.ErrRouterNotFound) {
+				return nil, status.Error(codes.InvalidArgument, "no routers found to send the command")
+			}
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
 		return &pb.SendCommandResponse{
 			CommandId: "",
-			Message:   "Command sent to all routers",
+			Message:   fmt.Sprintf("Command sent to %d router(s)", count),
 		}, nil
 	}
 

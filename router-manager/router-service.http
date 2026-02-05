@@ -2,9 +2,17 @@
 GRPC localhost:50051/api.v1.RouterService/SendCommand
 
 {
-  "router_id": "123e4567-e89b-12d3-a456-426614174000",
+  "router_id": "9b398546-29f9-4a26-a0cc-6b3aa87ff395",
   "command_type": "REBOOT",
   "payload": "{\"reason\": \"scheduled maintenance\", \"delay_seconds\": 30}"
+}
+
+### Broadcast Command to All Routers
+GRPC localhost:50051/api.v1.RouterService/SendCommand
+
+{
+    "command_type": "UPDATE_FIRMWARE",
+    "payload": "{\"version\": \"1.2.3\", \"url\": \"https://example.com/firmware.bin\"}"
 }
 
 ### Poll Outstanding Commands for a Router
