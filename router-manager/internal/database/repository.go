@@ -29,8 +29,8 @@ var (
 // CreateCommand inserts a new command into the database for a specific router.
 // Returns the created Command and an error if the operation fails.
 // If the router does not exist, returns ErrRouterNotFound.
-func (db *DB) CreateCommand(ctx context.Context, routerID, commandType, payload string) (*Command, error) {
-	tx, err := db.Pool.Begin(ctx)
+func (r *CommandRepo) CreateCommand(ctx context.Context, routerID, commandType, payload string) (*Command, error) {
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +77,8 @@ func (db *DB) CreateCommand(ctx context.Context, routerID, commandType, payload 
 // BroadcastCommand creates a command for all registered routers in the system.
 // Returns the number of commands created (one per router) and an error if the operation fails.
 // If no routers are found, returns ErrRouterNotFound.
-func (db *DB) BroadcastCommand(ctx context.Context, commandType, payload string) (int64, error) {
-	tx, err := db.Pool.Begin(ctx)
+func (r *CommandRepo) BroadcastCommand(ctx context.Context, commandType, payload string) (int64, error) {
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -113,8 +113,8 @@ func (db *DB) BroadcastCommand(ctx context.Context, commandType, payload string)
 
 // GetOutstandingCommands retrieves all commands for a specific router that are in 'PENDING' or 'SENT' status.
 // It updates the status of these commands to 'SENT' and sets the sent_at timestamp to the current time.
-func (db *DB) GetOutstandingCommands(ctx context.Context, routerID string) ([]Command, error) {
-	tx, err := db.Pool.Begin(ctx)
+func (r *CommandRepo) GetOutstandingCommands(ctx context.Context, routerID string) ([]Command, error) {
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +160,8 @@ func (db *DB) GetOutstandingCommands(ctx context.Context, routerID string) ([]Co
 }
 
 // AcknowledgeCommand updates the status of a command to 'ACKED' and sets the acked_at timestamp to the current time.
-func (db *DB) AcknowledgeCommand(ctx context.Context, commandID string, routerID string) error {
-	tx, err := db.Pool.Begin(ctx)
+func (r *CommandRepo) AcknowledgeCommand(ctx context.Context, commandID string, routerID string) error {
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -195,8 +195,8 @@ func (db *DB) AcknowledgeCommand(ctx context.Context, commandID string, routerID
 
 // TouchRouter updates the last_seen_at timestamp of a router to the current time.
 // Returns an error if the operation fails or if the router does not exist.
-func (db *DB) TouchRouter(ctx context.Context, routerID string) error {
-	tx, err := db.Pool.Begin(ctx)
+func (r *RouterRepo) TouchRouter(ctx context.Context, routerID string) error {
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}

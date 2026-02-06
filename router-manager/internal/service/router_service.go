@@ -6,10 +6,10 @@ import (
 )
 
 type RouterService struct {
-	repo *database.DB
+	repo database.Repository
 }
 
-func NewRouterService(repo *database.DB) *RouterService {
+func NewRouterService(repo database.Repository) *RouterService {
 	return &RouterService{repo: repo}
 }
 

@@ -11,6 +11,16 @@ import (
 
 type DB struct {
 	Pool *pgxpool.Pool
+	*CommandRepo
+	*RouterRepo
+}
+
+type CommandRepo struct {
+	pool *pgxpool.Pool
+}
+
+type RouterRepo struct {
+	pool *pgxpool.Pool
 }
 
 func New(connectionString string) (*DB, error) {
@@ -41,7 +51,19 @@ func New(connectionString string) (*DB, error) {
 
 	log.Println("Database connection established successfully")
 
-	return &DB{Pool: pool}, nil
+	return &DB{
+		Pool:        pool,
+		CommandRepo: &CommandRepo{pool: pool},
+		RouterRepo:  &RouterRepo{pool: pool},
+	}, nil
+}
+
+func (db *DB) Commands() CommandRepository {
+	return db.CommandRepo
+}
+
+func (db *DB) Routers() RouterRepository {
+	return db.RouterRepo
 }
 
 func (db *DB) Close() {
