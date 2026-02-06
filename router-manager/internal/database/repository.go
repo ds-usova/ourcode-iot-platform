@@ -111,6 +111,8 @@ func (db *DB) BroadcastCommand(ctx context.Context, commandType, payload string)
 	return rowsAffected, nil
 }
 
+// GetOutstandingCommands retrieves all commands for a specific router that are in 'PENDING' or 'SENT' status.
+// It updates the status of these commands to 'SENT' and sets the sent_at timestamp to the current time.
 func (db *DB) GetOutstandingCommands(ctx context.Context, routerID string) ([]Command, error) {
 	tx, err := db.Pool.Begin(ctx)
 	if err != nil {
@@ -157,6 +159,7 @@ func (db *DB) GetOutstandingCommands(ctx context.Context, routerID string) ([]Co
 	return commands, nil
 }
 
+// AcknowledgeCommand updates the status of a command to 'ACKED' and sets the acked_at timestamp to the current time.
 func (db *DB) AcknowledgeCommand(ctx context.Context, commandID string, routerID string) error {
 	tx, err := db.Pool.Begin(ctx)
 	if err != nil {
@@ -187,5 +190,40 @@ func (db *DB) AcknowledgeCommand(ctx context.Context, commandID string, routerID
 	}
 
 	log.Printf("Acknowledged command with ID %s", commandID)
+	return nil
+}
+
+// TouchRouter updates the last_seen_at timestamp of a router to the current time.
+// Returns an error if the operation fails or if the router does not exist.
+func (db *DB) TouchRouter(ctx context.Context, routerID string) error {
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	query := `
+		UPDATE routers
+		SET last_seen_at = NOW()
+		WHERE id = $1
+	`
+
+	cmdTag, err := tx.Exec(ctx, query, routerID)
+	if err != nil {
+		log.Printf("Error touching router: %v", err)
+		return fmt.Errorf("failed to touch router: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		log.Printf("Warning: No router found with ID %s to touch", routerID)
+		return ErrRouterNotFound
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Touched router with ID %s", routerID)
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"router-manager/internal/config"
 	"router-manager/internal/database"
 	"router-manager/internal/server"
+	"router-manager/internal/service"
 	pb "router-manager/proto"
 
 	"google.golang.org/grpc"
@@ -21,6 +22,9 @@ func main() {
 	}
 	defer db.Close()
 
+	// Initialize service layer
+	routerService := service.NewRouterService(db)
+
 	// Setup gRPC server
 	lis, err := net.Listen("tcp", cfg.Server.Port)
 	if err != nil {
@@ -28,7 +32,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	routerServer := server.NewRouterServer(db)
+	routerServer := server.NewRouterServer(routerService)
 	pb.RegisterRouterServiceServer(grpcServer, routerServer)
 
 	log.Println("========================================")
@@ -37,7 +41,7 @@ func main() {
 	log.Printf("️Database: %s@%s:%s/%s (schema: %s)", cfg.Database.User, cfg.Database.Host, cfg.Database.Port, cfg.Database.Database, cfg.Database.Schema)
 	log.Println("========================================")
 	log.Println("Available endpoints:")
-	log.Println("  POST /api.v1.RouterService/SendCommand")
+	log.Println("  POST /api.v1.RouterService/SubmitCommand")
 	log.Println("  POST /api.v1.RouterService/PollOutstandingCommands")
 	log.Println("  POST /api.v1.RouterService/AcknowledgeCommand")
 	log.Println("========================================")
