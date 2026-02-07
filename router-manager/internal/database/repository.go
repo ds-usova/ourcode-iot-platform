@@ -11,7 +11,7 @@ import (
 )
 
 type Command struct {
-	Id             string
+	ID             string
 	RouterID       string
 	CommandType    string
 	Payload        string
@@ -44,7 +44,7 @@ func (r *CommandRepo) CreateCommand(ctx context.Context, routerID, commandType, 
 
 	var cmd Command
 	err = tx.QueryRow(ctx, query, routerID, commandType, payload).Scan(
-		&cmd.Id,
+		&cmd.ID,
 		&cmd.RouterID,
 		&cmd.CommandType,
 		&cmd.Payload,
@@ -136,7 +136,7 @@ func (r *CommandRepo) GetOutstandingCommands(ctx context.Context, routerID strin
 	var commands []Command
 	for rows.Next() {
 		var cmd Command
-		err := rows.Scan(&cmd.Id, &cmd.CommandType, &cmd.Payload)
+		err := rows.Scan(&cmd.ID, &cmd.CommandType, &cmd.Payload)
 		if err != nil {
 			rows.Close()
 			log.Printf("Error scanning command row: %v", err)

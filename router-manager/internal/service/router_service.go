@@ -48,7 +48,7 @@ func (s *RouterService) SubmitCommand(ctx context.Context, routerID, commandType
 		return nil, err
 	}
 	return &SubmitCommandResult{
-		CommandID:       cmd.Id,
+		CommandID:       cmd.ID,
 		RoutersAffected: 1,
 		IsBroadcast:     false,
 	}, nil
@@ -68,7 +68,7 @@ func (s *RouterService) PollCommands(ctx context.Context, routerID string) ([]Co
 	commands := make([]Command, len(dbCommands))
 	for i, cmd := range dbCommands {
 		commands[i] = Command{
-			ID:          cmd.Id,
+			ID:          cmd.ID,
 			RouterID:    cmd.RouterID,
 			CommandType: cmd.CommandType,
 			Payload:     cmd.Payload,
