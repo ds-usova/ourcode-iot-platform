@@ -13,12 +13,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type RouterServer struct {
-	pb.UnimplementedRouterServiceServer
-	routerService *service.RouterService
+type RouterServiceInterface interface {
+	SubmitCommand(ctx context.Context, routerID, commandType, payload string) (*service.SubmitCommandResult, error)
+	PollCommands(ctx context.Context, routerID string) ([]service.Command, error)
+	AcknowledgeCommand(ctx context.Context, commandID, routerID string) error
 }
 
-func NewRouterServer(routerService *service.RouterService) *RouterServer {
+type RouterServer struct {
+	pb.UnimplementedRouterServiceServer
+	routerService RouterServiceInterface
+}
+
+func NewRouterServer(routerService RouterServiceInterface) *RouterServer {
 	return &RouterServer{routerService: routerService}
 }
 
