@@ -80,3 +80,39 @@ func randomString(n int) string {
 	}
 	return string(b)
 }
+
+// CountCommandsForRouter counts how many commands exist for a specific router in the database
+func (env *TestEnvironment) CountCommandsForRouter(routerID string) (int, error) {
+	pool, err := pgxpool.New(env.Ctx, env.ConnString)
+	if err != nil {
+		return 0, fmt.Errorf("failed to connect to database: %w", err)
+	}
+	defer pool.Close()
+
+	var count int
+	err = pool.QueryRow(env.Ctx, `
+		SELECT COUNT(*)
+		FROM router.commands
+		WHERE router_id = $1
+	`, routerID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count commands: %w", err)
+	}
+
+	return count, nil
+}
+
+// ClearDatabase deletes all routers and commands from the database
+func (env *TestEnvironment) ClearDatabase() error {
+	pool, err := pgxpool.New(env.Ctx, env.ConnString)
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+	defer pool.Close()
+
+	if _, err := pool.Exec(env.Ctx, "TRUNCATE router.commands, router.routers RESTART IDENTITY CASCADE"); err != nil {
+		return fmt.Errorf("failed to clear database: %w", err)
+	}
+
+	return nil
+}

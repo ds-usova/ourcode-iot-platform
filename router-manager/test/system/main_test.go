@@ -29,3 +29,23 @@ func TestMain(m *testing.M) {
 
 	os.Exit(code)
 }
+
+// SetupTest prepares the environment for a single test case.
+// It returns the shared testEnv and registers a cleanup function to
+// clear the database after the test finishes.
+func SetupTest(t *testing.T) *sysconfig.SystemTestEnvironment {
+	t.Helper()
+
+	// Clear before test to ensure a clean start
+	if err := testEnv.ClearDatabase(); err != nil {
+		t.Fatalf("Failed to clear database before test: %v", err)
+	}
+
+	t.Cleanup(func() {
+		if err := testEnv.ClearDatabase(); err != nil {
+			t.Errorf("Failed to clear database after test: %v", err)
+		}
+	})
+
+	return testEnv
+}
