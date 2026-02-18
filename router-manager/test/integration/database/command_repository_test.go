@@ -304,6 +304,7 @@ func TestAcknowledgeCommand_WhenWrongRouterID_ReturnError(t *testing.T) {
 	ctx := context.Background()
 	env := SetupTest(t)
 
+	// Given: Router exists and command is in "SENT" status
 	otherRouterID := "550e8400-e29b-41d4-a716-446655449999"
 	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
 		t.Fatalf("Failed to create test router: %v", err)
@@ -352,5 +353,62 @@ func TestAcknowledgeCommand_WhenNonExistentCommandID_ReturnError(t *testing.T) {
 	// Then: ErrSentCommandNotFound is returned
 	if !errors.Is(err, database.ErrSentCommandNotFound) {
 		t.Fatalf("Expected database.ErrSentCommandNotFound, got %v", err)
+	}
+}
+
+// TestCommandLifecycle_FromBroadcastToAck_RetrievedCorrectly is an integration test that
+// Given:
+// - Router exists
+// - Command was broadcasted
+// - The command was polled with GetOutstandingCommands (status "SENT")
+// - Command was acknowledged (status "ACKED")
+// When:
+// - It is polled again
+// Then:
+// - No command is returned
+func TestCommandLifecycle_FromBroadcastToAck_RetrievedCorrectly(t *testing.T) {
+	ctx := context.Background()
+	env := SetupTest(t)
+
+	// Given: Router exists and command is broadcasted
+	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
+		t.Fatalf("Failed to create test router: %v", err)
+	}
+
+	_, err := env.DB.Commands().BroadcastCommand(ctx, testCommandType, testPayload)
+	if err != nil {
+		t.Fatalf("Failed to broadcast command: %v", err)
+	}
+
+	// Given: Command is polled once (becomes SENT)
+	commands, err := env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
+	if err != nil {
+		t.Fatalf("Failed to poll outstanding commands: %v", err)
+	}
+	if len(commands) != 1 {
+		t.Fatalf("Expected 1 outstanding command, got %d", len(commands))
+	}
+	cmdID := commands[0].ID
+
+	// Given: Command is acknowledged (becomes ACKED)
+	if err := env.DB.Commands().AcknowledgeCommand(ctx, cmdID, testRouterID); err != nil {
+		t.Fatalf("Failed to acknowledge command: %v", err)
+	}
+
+	// When: Polled again
+	log.Println("Polling again after acknowledgment...")
+	commands, err = env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
+	if err != nil {
+		t.Fatalf("Failed to poll outstanding commands again: %v", err)
+	}
+
+	// Then: No command is returned (since status is ACKED)
+	if len(commands) != 0 {
+		t.Errorf("Expected 0 outstanding commands after acknowledgment, got %d", len(commands))
+	}
+
+	// Verify final state in database
+	if err := env.VerifyCommandInDatabase(cmdID, testRouterID, testCommandType, "ACKED"); err != nil {
+		t.Fatalf("Failed to verify final status is ACKED: %v", err)
 	}
 }
