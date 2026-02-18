@@ -92,6 +92,31 @@ func (env *TestEnvironment) VerifyCommandSentAt(commandID string) error {
 	return nil
 }
 
+// VerifyCommandAckedAt checks that the acked_at timestamp is set for a command
+func (env *TestEnvironment) VerifyCommandAckedAt(commandID string) error {
+	pool, err := pgxpool.New(env.Ctx, env.ConnString)
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+	defer pool.Close()
+
+	var ackedAt *time.Time
+	err = pool.QueryRow(env.Ctx, `
+		SELECT acked_at
+		FROM router.commands
+		WHERE id = $1
+	`, commandID).Scan(&ackedAt)
+	if err != nil {
+		return fmt.Errorf("failed to query acked_at: %w", err)
+	}
+
+	if ackedAt == nil {
+		return fmt.Errorf("expected acked_at to be set, but it was null")
+	}
+
+	return nil
+}
+
 // StringPtr returns a pointer to the given string
 func StringPtr(s string) *string {
 	return &s
