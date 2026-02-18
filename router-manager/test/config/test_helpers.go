@@ -152,6 +152,27 @@ func (env *TestEnvironment) CountCommandsForRouter(routerID string) (int, error)
 	return count, nil
 }
 
+// GetRouterLastSeenAt retrieves the last_seen_at timestamp for a router
+func (env *TestEnvironment) GetRouterLastSeenAt(routerID string) (time.Time, error) {
+	pool, err := pgxpool.New(env.Ctx, env.ConnString)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to connect to database: %w", err)
+	}
+	defer pool.Close()
+
+	var lastSeen time.Time
+	err = pool.QueryRow(env.Ctx, `
+		SELECT last_seen_at
+		FROM router.routers
+		WHERE id = $1
+	`, routerID).Scan(&lastSeen)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to query last_seen_at: %w", err)
+	}
+
+	return lastSeen, nil
+}
+
 // ClearDatabase deletes all routers and commands from the database
 func (env *TestEnvironment) ClearDatabase() error {
 	pool, err := pgxpool.New(env.Ctx, env.ConnString)
