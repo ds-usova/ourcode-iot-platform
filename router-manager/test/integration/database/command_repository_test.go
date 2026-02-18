@@ -150,3 +150,101 @@ func TestBroadcastCommand_WhenNoRoutersExist_ReturnError(t *testing.T) {
 
 	log.Printf("Received expected error: %v", err)
 }
+
+// TestGetOutstandingCommands_WhenPendingCommandExists_ReturnCommand is an integration test that
+// Given:
+// - Router is created
+// - Command is created with status "PENDING"
+// When:
+// - GetOutstandingCommands is called
+// Then:
+// - The correct command is returned and its status is updated to "SENT"
+func TestGetOutstandingCommands_WhenPendingCommandExists_ReturnCommand(t *testing.T) {
+	ctx := context.Background()
+	env := SetupTest(t)
+
+	// Given: Router exists and a pending command is created
+	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
+		t.Fatalf("Failed to create test router: %v", err)
+	}
+
+	cmd, err := env.DB.Commands().CreateCommand(ctx, testRouterID, testCommandType, testPayload)
+	if err != nil {
+		t.Fatalf("Failed to create pending command: %v", err)
+	}
+
+	// When: Get outstanding commands
+	log.Println("Retrieving outstanding commands...")
+	commands, err := env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
+	if err != nil {
+		t.Fatalf("Failed to get outstanding commands: %v", err)
+	}
+
+	// Then: Verify the correct command is returned
+	if len(commands) != 1 {
+		t.Errorf("Expected 1 outstanding command, got %d", len(commands))
+	}
+
+	foundCmd := commands[0]
+	if foundCmd.ID != cmd.ID {
+		t.Errorf("Expected command ID %s, got %s", cmd.ID, foundCmd.ID)
+	}
+	if foundCmd.CommandType != testCommandType {
+		t.Errorf("Expected command type %s, got %s", testCommandType, foundCmd.CommandType)
+	}
+
+	// Then: Verify status in database is updated to "SENT" and sent_at is set
+	if err := env.VerifyCommandInDatabase(cmd.ID, testRouterID, testCommandType, "SENT"); err != nil {
+		t.Fatalf("Failed to verify command status updated to SENT: %v", err)
+	}
+
+	if err := env.VerifyCommandSentAt(cmd.ID); err != nil {
+		t.Fatalf("Failed to verify sent_at timestamp: %v", err)
+	}
+}
+
+// TestGetOutstandingCommands_WhenCommandIsSent_ReturnCommandAgain is an integration test that
+// Given:
+// - Router is created
+// - Command is created with status "PENDING"
+// - Command is retrieved with GetOutstandingCommands (status becomes "SENT")
+// When:
+// - GetOutstandingCommands is called again
+// Then:
+// - The command is still returned
+func TestGetOutstandingCommands_WhenCommandIsSent_ReturnCommandAgain(t *testing.T) {
+	ctx := context.Background()
+	env := SetupTest(t)
+
+	// Given: Router exists and a pending command is created
+	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
+		t.Fatalf("Failed to create test router: %v", err)
+	}
+
+	cmd, err := env.DB.Commands().CreateCommand(ctx, testRouterID, testCommandType, testPayload)
+	if err != nil {
+		t.Fatalf("Failed to create pending command: %v", err)
+	}
+
+	// Given: Command is retrieved once (status becomes SENT)
+	_, err = env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
+	if err != nil {
+		t.Fatalf("Failed to get outstanding commands for the first time: %v", err)
+	}
+
+	// When: Get outstanding commands again
+	log.Println("Retrieving outstanding commands again...")
+	commands, err := env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
+	if err != nil {
+		t.Fatalf("Failed to get outstanding commands again: %v", err)
+	}
+
+	// Then: The command should still be returned
+	if len(commands) != 1 {
+		t.Errorf("Expected 1 outstanding command on second call, got %d", len(commands))
+	}
+
+	if commands[0].ID != cmd.ID {
+		t.Errorf("Expected command ID %s, got %s", cmd.ID, commands[0].ID)
+	}
+}

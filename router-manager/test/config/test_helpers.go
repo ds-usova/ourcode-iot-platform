@@ -67,6 +67,31 @@ func (env *TestEnvironment) VerifyCommandInDatabase(commandID, routerID, expecte
 	return nil
 }
 
+// VerifyCommandSentAt checks that the sent_at timestamp is set for a command
+func (env *TestEnvironment) VerifyCommandSentAt(commandID string) error {
+	pool, err := pgxpool.New(env.Ctx, env.ConnString)
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+	defer pool.Close()
+
+	var sentAt *time.Time
+	err = pool.QueryRow(env.Ctx, `
+		SELECT sent_at
+		FROM router.commands
+		WHERE id = $1
+	`, commandID).Scan(&sentAt)
+	if err != nil {
+		return fmt.Errorf("failed to query sent_at: %w", err)
+	}
+
+	if sentAt == nil {
+		return fmt.Errorf("expected sent_at to be set, but it was null")
+	}
+
+	return nil
+}
+
 // StringPtr returns a pointer to the given string
 func StringPtr(s string) *string {
 	return &s
