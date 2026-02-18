@@ -1,0 +1,32 @@
+package system
+
+import (
+	"context"
+	"log"
+	"os"
+	"testing"
+
+	"router-manager/test/config"
+	intconfig "router-manager/test/integration/config"
+)
+
+var testEnv *config.TestEnvironment
+
+func TestMain(m *testing.M) {
+	ctx := context.Background()
+
+	// Setup: Start containers once for the whole integration suite
+	var err error
+	testEnv, err = intconfig.SetupIntegrationTest(ctx)
+	if err != nil {
+		log.Fatalf("Failed to setup integration test suite: %v", err)
+	}
+
+	// Run all tests in the package
+	code := m.Run()
+
+	// Teardown: Cleanup after all tests are done
+	testEnv.Cleanup()
+
+	os.Exit(code)
+}

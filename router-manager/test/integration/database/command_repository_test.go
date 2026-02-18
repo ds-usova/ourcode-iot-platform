@@ -4,8 +4,6 @@ import (
 	"context"
 	"log"
 	"testing"
-
-	intconfig "router-manager/test/integration/config"
 )
 
 const (
@@ -26,19 +24,13 @@ func TestCreateCommand_WhenRouterExist_CreateCommand(t *testing.T) {
 	ctx := context.Background()
 
 	// Given: Router exists in the database
-	env, err := intconfig.SetupIntegrationTest(ctx)
-	if err != nil {
-		t.Fatalf("Failed to setup test environment: %v", err)
-	}
-	defer env.Cleanup()
-
-	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
+	if err := testEnv.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
 		t.Fatalf("Failed to create test router: %v", err)
 	}
 
 	// When: Send create command for existing router
 	log.Println("Creating command request...")
-	cmd, err := env.DB.Commands().CreateCommand(ctx, testRouterID, testCommandType, testPayload)
+	cmd, err := testEnv.DB.Commands().CreateCommand(ctx, testRouterID, testCommandType, testPayload)
 	if err != nil {
 		t.Fatalf("Failed to create command: %v", err)
 	}
@@ -56,7 +48,31 @@ func TestCreateCommand_WhenRouterExist_CreateCommand(t *testing.T) {
 	}
 
 	// Then: verify command is stored in the database with correct fields
-	if err := env.VerifyCommandInDatabase(cmd.ID, testRouterID, testCommandType, "PENDING"); err != nil {
+	if err := testEnv.VerifyCommandInDatabase(cmd.ID, testRouterID, testCommandType, "PENDING"); err != nil {
 		t.Fatalf("Failed to verify command in database: %v", err)
 	}
+}
+
+// TestCreateCommand_WhenRouterDoesNotExist_ReturnError is an integration test that
+// Given:
+// - Router does not exist in the database
+// When:
+// - CreateCommand is called for the non-existing router
+// Then:
+// - An error is returned
+func TestCreateCommand_WhenRouterDoesNotExist_ReturnError(t *testing.T) {
+	ctx := context.Background()
+
+	nonExistentRouterID := "00000000-0000-0000-0000-000000000000"
+
+	// When: Send create command for a non-existing router
+	log.Println("Creating command request for non-existent router...")
+	_, err := testEnv.DB.Commands().CreateCommand(ctx, nonExistentRouterID, testCommandType, testPayload)
+
+	// Then: Verify that an error is returned
+	if err == nil {
+		t.Fatal("Expected error when creating command for non-existent router, but got nil")
+	}
+
+	log.Printf("Received expected error: %v", err)
 }

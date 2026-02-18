@@ -8,7 +8,6 @@ import (
 
 	pb "router-manager/proto"
 	"router-manager/test/config"
-	sysconfig "router-manager/test/system/config"
 )
 
 const (
@@ -29,20 +28,15 @@ const (
 func TestSendCommand_SystemTest(t *testing.T) {
 	ctx := context.Background()
 
-	// Given
-	env, err := sysconfig.SetupSystemTest(ctx)
-	if err != nil {
-		t.Fatalf("Failed to setup test environment: %v", err)
-	}
-	defer env.Cleanup()
-
-	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
+	// Given: Test router exists
+	log.Printf("Starting TestSendCommand_SystemTest with router ID: %s", testRouterID)
+	if err := testEnv.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
 		t.Fatalf("Failed to create test router: %v", err)
 	}
 
 	// When: Send SendCommand request
 	log.Println("Sending SendCommand request...")
-	resp, err := env.Client.SendCommand(ctx, &pb.SendCommandRequest{
+	resp, err := testEnv.Client.SendCommand(ctx, &pb.SendCommandRequest{
 		RouterId:    config.StringPtr(testRouterID),
 		CommandType: testCommandType,
 		Payload:     testPayload,
@@ -64,7 +58,7 @@ func TestSendCommand_SystemTest(t *testing.T) {
 
 	// Then: Verify command in database
 	log.Println("Verifying command in database...")
-	if err := env.VerifyCommandInDatabase(resp.CommandId, testRouterID, testCommandType, "PENDING"); err != nil {
+	if err := testEnv.VerifyCommandInDatabase(resp.CommandId, testRouterID, testCommandType, "PENDING"); err != nil {
 		t.Fatalf("Failed to verify command in database: %v", err)
 	}
 }
