@@ -63,23 +63,20 @@ func TestCreateCommand_WhenRouterExist_CreateCommand(t *testing.T) {
 // When:
 // - CreateCommand is called for the non-existing router
 // Then:
-// - An error is returned
+// - ErrRouterNotFound is returned
 func TestCreateCommand_WhenRouterDoesNotExist_ReturnError(t *testing.T) {
 	ctx := context.Background()
 	env := SetupTest(t)
 
 	nonExistentRouterID := "00000000-0000-0000-0000-000000000000"
 
-	// When: Send create command for a non-existing router
-	log.Println("Creating command request for non-existent router...")
+	// When: Create command for a non-existent router
 	_, err := env.DB.Commands().CreateCommand(ctx, nonExistentRouterID, testCommandType, testPayload)
 
-	// Then: Verify that an error is returned
-	if err == nil {
-		t.Fatal("Expected error when creating command for non-existent router, but got nil")
+	// Then: ErrRouterNotFound is returned
+	if !errors.Is(err, database.ErrRouterNotFound) {
+		t.Fatalf("Expected database.ErrRouterNotFound, got %v", err)
 	}
-
-	log.Printf("Received expected error: %v", err)
 }
 
 // TestBroadcastCommand_WhenRoutersExist_CreateCommandsForAll is an integration test that
@@ -249,6 +246,59 @@ func TestGetOutstandingCommands_WhenCommandIsSent_ReturnCommandAgain(t *testing.
 	}
 }
 
+// TestGetOutstandingCommands_WhenNoCommandsForRouter_ReturnEmpty is an integration test that
+// Given:
+// - Router exists but has no commands
+// When:
+// - GetOutstandingCommands is called
+// Then:
+// - An empty list is returned with no error
+func TestGetOutstandingCommands_WhenNoCommandsForRouter_ReturnEmpty(t *testing.T) {
+	ctx := context.Background()
+	env := SetupTest(t)
+
+	// Given: Router exists but has no commands
+	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
+		t.Fatalf("Failed to create test router: %v", err)
+	}
+
+	// When: Get outstanding commands
+	commands, err := env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
+
+	// Then: No error and empty list returned
+	if err != nil {
+		t.Fatalf("Expected no error for router with no commands, got %v", err)
+	}
+	if len(commands) != 0 {
+		t.Errorf("Expected 0 commands for router with no commands, got %d", len(commands))
+	}
+}
+
+// TestGetOutstandingCommands_WhenRouterNotFound_ReturnEmpty is an integration test that
+// Given:
+// - No router exists in the database
+// When:
+// - GetOutstandingCommands is called with a non-existent router ID
+// Then:
+// - An empty list is returned with no error (the UPDATE matches 0 rows)
+func TestGetOutstandingCommands_WhenRouterNotFound_ReturnEmpty(t *testing.T) {
+	ctx := context.Background()
+	env := SetupTest(t)
+
+	nonExistentRouterID := "00000000-0000-0000-0000-000000000000"
+
+	// When: Get outstanding commands for a non-existent router
+	commands, err := env.DB.Commands().GetOutstandingCommands(ctx, nonExistentRouterID)
+
+	// Then: No error and empty list returned
+	if err != nil {
+		t.Fatalf("Expected no error for non-existent router, got %v", err)
+	}
+	if len(commands) != 0 {
+		t.Errorf("Expected 0 commands for non-existent router, got %d", len(commands))
+	}
+}
+
 // TestAcknowledgeCommand_WhenValidIDs_UpdateStatus is an integration test that
 // Given:
 // - Router exists
@@ -295,19 +345,24 @@ func TestAcknowledgeCommand_WhenValidIDs_UpdateStatus(t *testing.T) {
 
 // TestAcknowledgeCommand_WhenWrongRouterID_ReturnError is an integration test that
 // Given:
-// - Command created for a different router
+// - Two routers exist
+// - Command is created for router A and is in "SENT" status
 // When:
-// - AcknowledgeCommand is called with command ID but wrong router ID
+// - AcknowledgeCommand is called with router B's ID (exists but doesn't own the command)
 // Then:
 // - ErrSentCommandNotFound is returned
 func TestAcknowledgeCommand_WhenWrongRouterID_ReturnError(t *testing.T) {
 	ctx := context.Background()
 	env := SetupTest(t)
 
-	// Given: Router exists and command is in "SENT" status
 	otherRouterID := "550e8400-e29b-41d4-a716-446655449999"
+
+	// Given: Both routers exist, command belongs to testRouterID and is in "SENT" status
 	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
 		t.Fatalf("Failed to create test router: %v", err)
+	}
+	if err := env.CreateTestRouter(otherRouterID, "SN-OTHER"); err != nil {
+		t.Fatalf("Failed to create other router: %v", err)
 	}
 
 	cmd, err := env.DB.Commands().CreateCommand(ctx, testRouterID, testCommandType, testPayload)
@@ -319,8 +374,7 @@ func TestAcknowledgeCommand_WhenWrongRouterID_ReturnError(t *testing.T) {
 		t.Fatalf("Failed to set command status to SENT: %v", err)
 	}
 
-	// When: Acknowledge with wrong router ID
-	log.Println("Acknowledging command with wrong router ID...")
+	// When: Acknowledge with a router that exists but does not own the command
 	err = env.DB.Commands().AcknowledgeCommand(ctx, cmd.ID, otherRouterID)
 
 	// Then: ErrSentCommandNotFound is returned
@@ -349,6 +403,75 @@ func TestAcknowledgeCommand_WhenNonExistentCommandID_ReturnError(t *testing.T) {
 	// When: Acknowledge with non-existent command ID
 	log.Println("Acknowledging non-existent command...")
 	err := env.DB.Commands().AcknowledgeCommand(ctx, nonExistentCmdID, testRouterID)
+
+	// Then: ErrSentCommandNotFound is returned
+	if !errors.Is(err, database.ErrSentCommandNotFound) {
+		t.Fatalf("Expected database.ErrSentCommandNotFound, got %v", err)
+	}
+}
+
+// TestAcknowledgeCommand_WhenCommandNotSent_ReturnError is an integration test that
+// Given:
+// - A command exists in "PENDING" status (never polled)
+// When:
+// - AcknowledgeCommand is called before the command was retrieved via GetOutstandingCommands
+// Then:
+// - ErrSentCommandNotFound is returned (command must be in SENT status to be acknowledged)
+func TestAcknowledgeCommand_WhenCommandNotSent_ReturnError(t *testing.T) {
+	ctx := context.Background()
+	env := SetupTest(t)
+
+	// Given: Router exists and command is in "PENDING" status (not yet polled)
+	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
+		t.Fatalf("Failed to create test router: %v", err)
+	}
+
+	cmd, err := env.DB.Commands().CreateCommand(ctx, testRouterID, testCommandType, testPayload)
+	if err != nil {
+		t.Fatalf("Failed to create command: %v", err)
+	}
+
+	// When: Acknowledge command that is still PENDING (was never polled)
+	err = env.DB.Commands().AcknowledgeCommand(ctx, cmd.ID, testRouterID)
+
+	// Then: ErrSentCommandNotFound is returned
+	if !errors.Is(err, database.ErrSentCommandNotFound) {
+		t.Fatalf("Expected database.ErrSentCommandNotFound, got %v", err)
+	}
+}
+
+// TestAcknowledgeCommand_WhenCommandAlreadyAcked_ReturnError is an integration test that
+// Given:
+// - Router exists
+// - Command has been acknowledged (status "ACKED")
+// When:
+// - AcknowledgeCommand is called again for the same command
+// Then:
+// - ErrSentCommandNotFound is returned (WHERE status = 'SENT' does not match ACKED)
+func TestAcknowledgeCommand_WhenCommandAlreadyAcked_ReturnError(t *testing.T) {
+	ctx := context.Background()
+	env := SetupTest(t)
+
+	// Given: Router exists and command is acknowledged (ACKED)
+	if err := env.CreateTestRouter(testRouterID, testSerialNumber); err != nil {
+		t.Fatalf("Failed to create test router: %v", err)
+	}
+
+	cmd, err := env.DB.Commands().CreateCommand(ctx, testRouterID, testCommandType, testPayload)
+	if err != nil {
+		t.Fatalf("Failed to create command: %v", err)
+	}
+
+	if _, err := env.DB.Commands().GetOutstandingCommands(ctx, testRouterID); err != nil {
+		t.Fatalf("Failed to set command status to SENT: %v", err)
+	}
+
+	if err := env.DB.Commands().AcknowledgeCommand(ctx, cmd.ID, testRouterID); err != nil {
+		t.Fatalf("Failed to acknowledge command: %v", err)
+	}
+
+	// When: Acknowledge the same command again
+	err = env.DB.Commands().AcknowledgeCommand(ctx, cmd.ID, testRouterID)
 
 	// Then: ErrSentCommandNotFound is returned
 	if !errors.Is(err, database.ErrSentCommandNotFound) {

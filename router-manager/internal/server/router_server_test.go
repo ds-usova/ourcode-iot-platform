@@ -18,6 +18,10 @@ const (
 	testCommandID   = "cmd-789"
 )
 
+// =============================================================================
+// SendCommand
+// =============================================================================
+
 // TestSendCommand_SingleRouterSuccess tests successful command submission to a specific router
 func TestSendCommand_SingleRouterSuccess(t *testing.T) {
 	// Given: a valid request for a specific router
@@ -228,6 +232,297 @@ func TestSendCommand_InternalError(t *testing.T) {
 
 	// When: SendCommand is called
 	resp, err := server.SendCommand(context.Background(), req)
+
+	// Then: Should return Internal error
+	if resp != nil {
+		t.Errorf("Expected nil response, got %v", resp)
+	}
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatal("Expected gRPC status error")
+	}
+	if st.Code() != codes.Internal {
+		t.Errorf("Expected code Internal, got %v", st.Code())
+	}
+	if st.Message() != expectedErr.Error() {
+		t.Errorf("Expected message '%s', got '%s'", expectedErr.Error(), st.Message())
+	}
+}
+
+// =============================================================================
+// PollOutstandingCommands
+// =============================================================================
+
+// TestPollOutstandingCommands_Success tests successful retrieval of outstanding commands
+func TestPollOutstandingCommands_Success(t *testing.T) {
+	// Given: PollCommands returns a list of commands
+	routerID := "router-123"
+	req := &pb.PollOutstandingCommandsRequest{RouterId: routerID}
+
+	expectedCommands := []service.Command{
+		{ID: "cmd-1", CommandType: "reboot", Payload: ""},
+		{ID: "cmd-2", CommandType: "update", Payload: testPayload},
+	}
+
+	mockService := &MockRouterService{
+		PollCommandsFunc: func(ctx context.Context, routerIDParam string) ([]service.Command, error) {
+			if routerIDParam != routerID {
+				t.Errorf("Expected routerID '%s', got '%s'", routerID, routerIDParam)
+			}
+			return expectedCommands, nil
+		},
+	}
+
+	server := NewRouterServer(mockService)
+
+	// When: PollOutstandingCommands is called
+	resp, err := server.PollOutstandingCommands(context.Background(), req)
+
+	// Then: Response should contain the commands without error
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if resp == nil {
+		t.Fatal("Expected response, got nil")
+	}
+	if len(resp.Commands) != len(expectedCommands) {
+		t.Fatalf("Expected %d commands, got %d", len(expectedCommands), len(resp.Commands))
+	}
+	for i, cmd := range resp.Commands {
+		if cmd.CommandId != expectedCommands[i].ID {
+			t.Errorf("Command[%d]: Expected ID '%s', got '%s'", i, expectedCommands[i].ID, cmd.CommandId)
+		}
+		if cmd.CommandType != expectedCommands[i].CommandType {
+			t.Errorf("Command[%d]: Expected CommandType '%s', got '%s'", i, expectedCommands[i].CommandType, cmd.CommandType)
+		}
+		if cmd.Payload != expectedCommands[i].Payload {
+			t.Errorf("Command[%d]: Expected Payload '%s', got '%s'", i, expectedCommands[i].Payload, cmd.Payload)
+		}
+	}
+}
+
+// TestPollOutstandingCommands_RouterNotFound tests error handling when router is not found
+func TestPollOutstandingCommands_RouterNotFound(t *testing.T) {
+	// Given: PollCommands fails with ErrRouterNotFound
+	routerID := "router-123"
+	req := &pb.PollOutstandingCommandsRequest{RouterId: routerID}
+
+	mockService := &MockRouterService{
+		PollCommandsFunc: func(ctx context.Context, routerIDParam string) ([]service.Command, error) {
+			return nil, database.ErrRouterNotFound
+		},
+	}
+
+	server := NewRouterServer(mockService)
+
+	// When: PollOutstandingCommands is called
+	resp, err := server.PollOutstandingCommands(context.Background(), req)
+
+	// Then: Should return InvalidArgument error
+	if resp != nil {
+		t.Errorf("Expected nil response, got %v", resp)
+	}
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatal("Expected gRPC status error")
+	}
+	if st.Code() != codes.InvalidArgument {
+		t.Errorf("Expected code InvalidArgument, got %v", st.Code())
+	}
+	if st.Message() != "router not found" {
+		t.Errorf("Expected message 'router not found', got '%s'", st.Message())
+	}
+}
+
+// TestPollOutstandingCommands_InternalError tests error handling for internal service errors
+func TestPollOutstandingCommands_InternalError(t *testing.T) {
+	// Given: PollCommands fails with an internal error
+	routerID := "router-123"
+	req := &pb.PollOutstandingCommandsRequest{RouterId: routerID}
+	expectedErr := errors.New("database connection failed")
+
+	mockService := &MockRouterService{
+		PollCommandsFunc: func(ctx context.Context, routerIDParam string) ([]service.Command, error) {
+			return nil, expectedErr
+		},
+	}
+
+	server := NewRouterServer(mockService)
+
+	// When: PollOutstandingCommands is called
+	resp, err := server.PollOutstandingCommands(context.Background(), req)
+
+	// Then: Should return Internal error
+	if resp != nil {
+		t.Errorf("Expected nil response, got %v", resp)
+	}
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatal("Expected gRPC status error")
+	}
+	if st.Code() != codes.Internal {
+		t.Errorf("Expected code Internal, got %v", st.Code())
+	}
+	if st.Message() != expectedErr.Error() {
+		t.Errorf("Expected message '%s', got '%s'", expectedErr.Error(), st.Message())
+	}
+}
+
+// =============================================================================
+// AcknowledgeCommand
+// =============================================================================
+
+// TestAcknowledgeCommand_Success tests successful command acknowledgement
+func TestAcknowledgeCommand_Success(t *testing.T) {
+	// Given: a valid acknowledge request
+	routerID := "router-123"
+	req := &pb.AcknowledgeCommandRequest{
+		CommandId: testCommandID,
+		RouterId:  routerID,
+	}
+
+	mockService := &MockRouterService{
+		AcknowledgeCommandFunc: func(ctx context.Context, commandID, routerIDParam string) error {
+			if commandID != testCommandID {
+				t.Errorf("Expected commandID '%s', got '%s'", testCommandID, commandID)
+			}
+			if routerIDParam != routerID {
+				t.Errorf("Expected routerID '%s', got '%s'", routerID, routerIDParam)
+			}
+			return nil
+		},
+	}
+
+	server := NewRouterServer(mockService)
+
+	// When: AcknowledgeCommand is called
+	resp, err := server.AcknowledgeCommand(context.Background(), req)
+
+	// Then: Response should contain success message without error
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+	if resp == nil {
+		t.Fatal("Expected response, got nil")
+	}
+	if resp.Message != "Command acknowledged successfully." {
+		t.Errorf("Expected message 'Command acknowledged successfully.', got '%s'", resp.Message)
+	}
+}
+
+// TestAcknowledgeCommand_RouterNotFound tests error handling when router is not found
+func TestAcknowledgeCommand_RouterNotFound(t *testing.T) {
+	// Given: AcknowledgeCommand fails with ErrRouterNotFound
+	routerID := "router-123"
+	req := &pb.AcknowledgeCommandRequest{
+		CommandId: testCommandID,
+		RouterId:  routerID,
+	}
+
+	mockService := &MockRouterService{
+		AcknowledgeCommandFunc: func(ctx context.Context, commandID, routerIDParam string) error {
+			return database.ErrRouterNotFound
+		},
+	}
+
+	server := NewRouterServer(mockService)
+
+	// When: AcknowledgeCommand is called
+	resp, err := server.AcknowledgeCommand(context.Background(), req)
+
+	// Then: Should return InvalidArgument error with "router not found"
+	if resp != nil {
+		t.Errorf("Expected nil response, got %v", resp)
+	}
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatal("Expected gRPC status error")
+	}
+	if st.Code() != codes.InvalidArgument {
+		t.Errorf("Expected code InvalidArgument, got %v", st.Code())
+	}
+	if st.Message() != "router not found" {
+		t.Errorf("Expected message 'router not found', got '%s'", st.Message())
+	}
+}
+
+// TestAcknowledgeCommand_SentCommandNotFound tests error handling when the sent command is not found
+func TestAcknowledgeCommand_SentCommandNotFound(t *testing.T) {
+	// Given: AcknowledgeCommand fails with ErrSentCommandNotFound
+	routerID := "router-123"
+	req := &pb.AcknowledgeCommandRequest{
+		CommandId: testCommandID,
+		RouterId:  routerID,
+	}
+
+	mockService := &MockRouterService{
+		AcknowledgeCommandFunc: func(ctx context.Context, commandID, routerIDParam string) error {
+			return database.ErrSentCommandNotFound
+		},
+	}
+
+	server := NewRouterServer(mockService)
+
+	// When: AcknowledgeCommand is called
+	resp, err := server.AcknowledgeCommand(context.Background(), req)
+
+	// Then: Should return InvalidArgument error with "sent command not found"
+	if resp != nil {
+		t.Errorf("Expected nil response, got %v", resp)
+	}
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Fatal("Expected gRPC status error")
+	}
+	if st.Code() != codes.InvalidArgument {
+		t.Errorf("Expected code InvalidArgument, got %v", st.Code())
+	}
+	if st.Message() != "sent command not found" {
+		t.Errorf("Expected message 'sent command not found', got '%s'", st.Message())
+	}
+}
+
+// TestAcknowledgeCommand_InternalError tests error handling for internal service errors
+func TestAcknowledgeCommand_InternalError(t *testing.T) {
+	// Given: AcknowledgeCommand fails with an internal error
+	routerID := "router-123"
+	req := &pb.AcknowledgeCommandRequest{
+		CommandId: testCommandID,
+		RouterId:  routerID,
+	}
+
+	expectedErr := errors.New("database connection failed")
+
+	mockService := &MockRouterService{
+		AcknowledgeCommandFunc: func(ctx context.Context, commandID, routerIDParam string) error {
+			return expectedErr
+		},
+	}
+
+	server := NewRouterServer(mockService)
+
+	// When: AcknowledgeCommand is called
+	resp, err := server.AcknowledgeCommand(context.Background(), req)
 
 	// Then: Should return Internal error
 	if resp != nil {
