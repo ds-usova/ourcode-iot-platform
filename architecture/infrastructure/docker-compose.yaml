@@ -686,6 +686,30 @@ services:
       SHARD_1_REPLICA_PASSWORD: ${POSTGRES_PASSWORD}
       SHARD_1_REPLICA_CONNECTION_TIMEOUT: 5000
 
+  router-manager:
+    image: router-manager:latest
+    container_name: router-manager
+    ports:
+      - "50051:50051"
+    build:
+      context: ./../../router-manager
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      flyway-router:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${ROUTER_MANAGER_DB_USER}
+      DB_PASSWORD: ${ROUTER_MANAGER_DB_PASSWORD}
+      DB_NAME: ${POSTGRES_DB_NAME}
+      DB_SCHEMA: ${ROUTER_MANAGER_DB_SCHEMA}
+      DB_SSLMODE: disable
+      SERVER_PORT: ":50051"
+
   failed-events-processor:
       image: failed-events-processor:latest
       container_name: failed-events-processor

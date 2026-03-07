@@ -1,0 +1,16 @@
+bin/
+dist/
+vendor/
+*.exe
+*.test
+*.out
+coverage.html
+.env
+.env.local
+*.log
+logs/
+tmp/
+temp/
+.git/
+.idea/
+.vscode/
