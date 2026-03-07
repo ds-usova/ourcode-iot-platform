@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -53,7 +53,7 @@ func (r *CommandRepo) CreateCommand(ctx context.Context, routerID, commandType, 
 	)
 
 	if err != nil {
-		log.Printf("Error inserting command: %v", err)
+		slog.Error("failed to insert command", "router_id", routerID, "command_type", commandType, "error", err)
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
@@ -70,7 +70,7 @@ func (r *CommandRepo) CreateCommand(ctx context.Context, routerID, commandType, 
 		return nil, err
 	}
 
-	log.Printf("Created command: %v", cmd)
+	slog.Info("command created", "command_id", cmd.ID, "router_id", cmd.RouterID, "command_type", cmd.CommandType)
 	return &cmd, nil
 }
 
@@ -92,13 +92,13 @@ func (r *CommandRepo) BroadcastCommand(ctx context.Context, commandType, payload
 	cmdTag, err := tx.Exec(ctx, query, commandType, payload)
 
 	if err != nil {
-		log.Printf("Error broadcasting command: %v", err)
+		slog.Error("failed to broadcast command", "command_type", commandType, "error", err)
 		return 0, fmt.Errorf("failed to broadcast command: %w", err)
 	}
 
 	rowsAffected := cmdTag.RowsAffected()
 	if rowsAffected == 0 {
-		log.Printf("Warning: No routers found to broadcast command to")
+		slog.Warn("broadcast command skipped because no routers were found", "command_type", commandType)
 		return 0, ErrRouterNotFound
 	}
 
@@ -107,7 +107,7 @@ func (r *CommandRepo) BroadcastCommand(ctx context.Context, commandType, payload
 		return 0, err
 	}
 
-	log.Printf("Broadcasted command to %d routers: %s", rowsAffected, commandType)
+	slog.Info("broadcast command created", "command_type", commandType, "router_count", rowsAffected)
 	return rowsAffected, nil
 }
 
@@ -129,7 +129,7 @@ func (r *CommandRepo) GetOutstandingCommands(ctx context.Context, routerID strin
 
 	rows, err := tx.Query(ctx, updateQuery, routerID)
 	if err != nil {
-		log.Printf("Error querying outstanding commands: %v", err)
+		slog.Error("failed to query outstanding commands", "router_id", routerID, "error", err)
 		return nil, fmt.Errorf("failed to query outstanding commands: %w", err)
 	}
 
@@ -139,7 +139,7 @@ func (r *CommandRepo) GetOutstandingCommands(ctx context.Context, routerID strin
 		err := rows.Scan(&cmd.ID, &cmd.CommandType, &cmd.Payload)
 		if err != nil {
 			rows.Close()
-			log.Printf("Error scanning command row: %v", err)
+			slog.Error("failed to scan command row", "router_id", routerID, "error", err)
 			return nil, fmt.Errorf("failed to scan command row: %w", err)
 		}
 		commands = append(commands, cmd)
@@ -147,7 +147,7 @@ func (r *CommandRepo) GetOutstandingCommands(ctx context.Context, routerID strin
 	rows.Close()
 
 	if err := rows.Err(); err != nil {
-		log.Printf("Error iterating command rows: %v", err)
+		slog.Error("failed while iterating command rows", "router_id", routerID, "error", err)
 		return nil, fmt.Errorf("error iterating command rows: %w", err)
 	}
 
@@ -175,12 +175,12 @@ func (r *CommandRepo) AcknowledgeCommand(ctx context.Context, commandID string, 
 
 	cmdTag, err := tx.Exec(ctx, query, commandID, routerID)
 	if err != nil {
-		log.Printf("Error acknowledging command: %v", err)
+		slog.Error("failed to acknowledge command", "command_id", commandID, "router_id", routerID, "error", err)
 		return fmt.Errorf("failed to acknowledge command: %w", err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		log.Printf("Warning: No command found with ID %s to acknowledge", commandID)
+		slog.Warn("no sent command found to acknowledge", "command_id", commandID, "router_id", routerID)
 		return ErrSentCommandNotFound
 	}
 
@@ -189,7 +189,7 @@ func (r *CommandRepo) AcknowledgeCommand(ctx context.Context, commandID string, 
 		return err
 	}
 
-	log.Printf("Acknowledged command with ID %s", commandID)
+	slog.Info("command acknowledged", "command_id", commandID, "router_id", routerID)
 	return nil
 }
 
@@ -210,12 +210,12 @@ func (r *RouterRepo) TouchRouter(ctx context.Context, routerID string) error {
 
 	cmdTag, err := tx.Exec(ctx, query, routerID)
 	if err != nil {
-		log.Printf("Error touching router: %v", err)
+		slog.Error("failed to touch router", "router_id", routerID, "error", err)
 		return fmt.Errorf("failed to touch router: %w", err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		log.Printf("Warning: No router found with ID %s to touch", routerID)
+		slog.Warn("no router found to touch", "router_id", routerID)
 		return ErrRouterNotFound
 	}
 
@@ -224,6 +224,6 @@ func (r *RouterRepo) TouchRouter(ctx context.Context, routerID string) error {
 		return err
 	}
 
-	log.Printf("Touched router with ID %s", routerID)
+	slog.Info("router touched", "router_id", routerID)
 	return nil
 }

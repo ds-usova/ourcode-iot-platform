@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"router-manager/internal/database"
 
@@ -131,12 +132,12 @@ func CreateCleanupFunction(db *database.DB, pgContainer *postgres.PostgresContai
 		}
 		if pgContainer != nil {
 			if err := pgContainer.Terminate(ctx); err != nil {
-				fmt.Printf("Warning: failed to terminate PostgreSQL container: %v\n", err)
+				slog.Warn("failed to terminate PostgreSQL container", "error", err)
 			}
 		}
 		if network != nil {
 			if err := network.Remove(ctx); err != nil {
-				fmt.Printf("Warning: failed to remove network: %v\n", err)
+				slog.Warn("failed to remove test network", "error", err)
 			}
 		}
 	}

@@ -8,6 +8,7 @@ import (
 type Config struct {
 	Database DatabaseConfig
 	Server   ServerConfig
+	Logging  LoggingConfig
 }
 
 type DatabaseConfig struct {
@@ -24,6 +25,11 @@ type ServerConfig struct {
 	Port string
 }
 
+type LoggingConfig struct {
+	Level  string
+	Format string
+}
+
 func Load() *Config {
 	return &Config{
 		Database: DatabaseConfig{
@@ -37,6 +43,10 @@ func Load() *Config {
 		},
 		Server: ServerConfig{
 			Port: getEnv("SERVER_PORT", ":50051"),
+		},
+		Logging: LoggingConfig{
+			Level:  getEnv("LOG_LEVEL", "info"),
+			Format: getEnv("LOG_FORMAT", "text"),
 		},
 	}
 }

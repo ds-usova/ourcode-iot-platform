@@ -3,7 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -63,6 +63,6 @@ func StartPostgresContainer(ctx context.Context, config PostgresConfig) (*postgr
 	// Append search_path for schema
 	connString = fmt.Sprintf("%s&search_path=%s", connString, config.Schema)
 
-	log.Printf("PostgreSQL container started with connection string: %s", connString)
+	slog.Info("postgresql container started", "connection_string", connString)
 	return pgContainer, connString, nil
 }

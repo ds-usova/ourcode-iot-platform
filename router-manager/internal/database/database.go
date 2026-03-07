@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -49,7 +49,7 @@ func New(connectionString string) (*DB, error) {
 		return nil, fmt.Errorf("unable to ping database: %w", err)
 	}
 
-	log.Println("Database connection established successfully")
+	slog.Info("database connection established")
 
 	return &DB{
 		Pool:        pool,
@@ -69,6 +69,6 @@ func (db *DB) Routers() RouterRepository {
 func (db *DB) Close() {
 	if db.Pool != nil {
 		db.Pool.Close()
-		log.Println("Database connection closed")
+		slog.Info("database connection closed")
 	}
 }

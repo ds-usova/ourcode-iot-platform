@@ -3,7 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -24,7 +24,7 @@ func InitializeSchema(ctx context.Context, pgContainer *postgres.PostgresContain
 		return err
 	}
 
-	log.Println("Schema initialized successfully")
+	slog.Info("schema initialized successfully")
 	return nil
 }
 
@@ -41,13 +41,13 @@ func createDatabaseSchema(ctx context.Context, connStr string, schemaName string
 		return fmt.Errorf("failed to create schema: %w", err)
 	}
 
-	log.Printf("Schema '%s' ensured in the database", schemaName)
+	slog.Info("schema ensured in database", "schema", schemaName)
 	return nil
 }
 
 // executeMigrations runs the Flyway migrations using the testcontainer
 func executeMigrations(ctx context.Context, pgContainer *postgres.PostgresContainer, config PostgresConfig) error {
-	log.Println("Running Flyway migrations...")
+	slog.Info("running Flyway migrations")
 	if err := RunFlywayMigrations(ctx, pgContainer, config); err != nil {
 		return fmt.Errorf("failed to run Flyway migrations: %w", err)
 	}

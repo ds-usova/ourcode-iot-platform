@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 	"testing"
 
 	"router-manager/internal/database"
@@ -33,14 +33,14 @@ func TestCreateCommand_WhenRouterExist_CreateCommand(t *testing.T) {
 	}
 
 	// When: Send create command for existing router
-	log.Println("Creating command request...")
+	slog.Info("creating command request", "router_id", testRouterID)
 	cmd, err := env.DB.Commands().CreateCommand(ctx, testRouterID, testCommandType, testPayload)
 	if err != nil {
 		t.Fatalf("Failed to create command: %v", err)
 	}
 
 	// Then: Verify command is returned with correct fields
-	log.Println("Verifying command creation...")
+	slog.Info("verifying command creation", "command_id", cmd.ID)
 	if cmd.ID == "" {
 		t.Error("Expected non-empty command ID")
 	}
@@ -102,7 +102,7 @@ func TestBroadcastCommand_WhenRoutersExist_CreateCommandsForAll(t *testing.T) {
 	}
 
 	// When: Broadcast command
-	log.Println("Broadcasting command to all routers...")
+	slog.Info("broadcasting command to all routers", "command_type", testCommandType)
 	count, err := env.DB.Commands().BroadcastCommand(ctx, testCommandType, testPayload)
 	if err != nil {
 		t.Fatalf("Failed to broadcast command: %v", err)
@@ -137,7 +137,7 @@ func TestBroadcastCommand_WhenNoRoutersExist_ReturnError(t *testing.T) {
 	env := SetupTest(t)
 
 	// When: Broadcast command when no routers exist
-	log.Println("Broadcasting command when no routers exist...")
+	slog.Info("broadcasting command when no routers exist", "command_type", testCommandType)
 	_, err := env.DB.Commands().BroadcastCommand(ctx, testCommandType, testPayload)
 
 	// Then: Verify that ErrRouterNotFound is returned
@@ -145,7 +145,7 @@ func TestBroadcastCommand_WhenNoRoutersExist_ReturnError(t *testing.T) {
 		t.Fatalf("Expected database.ErrRouterNotFound, got %v", err)
 	}
 
-	log.Printf("Received expected error: %v", err)
+	slog.Warn("received expected error", "error", err)
 }
 
 // TestGetOutstandingCommands_WhenPendingCommandExists_ReturnCommand is an integration test that
@@ -171,7 +171,7 @@ func TestGetOutstandingCommands_WhenPendingCommandExists_ReturnCommand(t *testin
 	}
 
 	// When: Get outstanding commands
-	log.Println("Retrieving outstanding commands...")
+	slog.Info("retrieving outstanding commands", "router_id", testRouterID)
 	commands, err := env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
 	if err != nil {
 		t.Fatalf("Failed to get outstanding commands: %v", err)
@@ -230,7 +230,7 @@ func TestGetOutstandingCommands_WhenCommandIsSent_ReturnCommandAgain(t *testing.
 	}
 
 	// When: Get outstanding commands again
-	log.Println("Retrieving outstanding commands again...")
+	slog.Info("retrieving outstanding commands again", "router_id", testRouterID)
 	commands, err := env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
 	if err != nil {
 		t.Fatalf("Failed to get outstanding commands again: %v", err)
@@ -327,7 +327,7 @@ func TestAcknowledgeCommand_WhenValidIDs_UpdateStatus(t *testing.T) {
 	}
 
 	// When: Acknowledge command with correct IDs
-	log.Println("Acknowledging command...")
+	slog.Info("acknowledging command", "router_id", testRouterID, "command_id", cmd.ID)
 	if err := env.DB.Commands().AcknowledgeCommand(ctx, cmd.ID, testRouterID); err != nil {
 		t.Fatalf("Failed to acknowledge command: %v", err)
 	}
@@ -401,7 +401,7 @@ func TestAcknowledgeCommand_WhenNonExistentCommandID_ReturnError(t *testing.T) {
 	nonExistentCmdID := "00000000-0000-0000-0000-000000000000"
 
 	// When: Acknowledge with non-existent command ID
-	log.Println("Acknowledging non-existent command...")
+	slog.Info("acknowledging non-existent command", "router_id", testRouterID, "command_id", nonExistentCmdID)
 	err := env.DB.Commands().AcknowledgeCommand(ctx, nonExistentCmdID, testRouterID)
 
 	// Then: ErrSentCommandNotFound is returned
@@ -519,7 +519,7 @@ func TestCommandLifecycle_FromBroadcastToAck_RetrievedCorrectly(t *testing.T) {
 	}
 
 	// When: Polled again
-	log.Println("Polling again after acknowledgment...")
+	slog.Info("polling after acknowledgment", "router_id", testRouterID)
 	commands, err = env.DB.Commands().GetOutstandingCommands(ctx, testRouterID)
 	if err != nil {
 		t.Fatalf("Failed to poll outstanding commands again: %v", err)

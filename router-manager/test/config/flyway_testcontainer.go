@@ -3,7 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"path/filepath"
@@ -37,10 +37,10 @@ func RunFlywayMigrations(ctx context.Context, pgContainer *postgres.PostgresCont
 	}
 
 	if err := flywayContainer.Terminate(ctx); err != nil {
-		log.Printf("Warning: failed to terminate Flyway container: %v", err)
+		slog.Warn("failed to terminate Flyway container", "error", err)
 	}
 
-	log.Println("Flyway migrations completed successfully")
+	slog.Info("Flyway migrations completed successfully")
 	return nil
 }
 
@@ -48,8 +48,8 @@ func RunFlywayMigrations(ctx context.Context, pgContainer *postgres.PostgresCont
 func createFlywayContainer(ctx context.Context, networks []string, config PostgresConfig) (testcontainers.Container, error) {
 	dbUrl := fmt.Sprintf("jdbc:postgresql://%s:%d/%s?currentSchema=%s", PostgresNetworkAlias, FlywayPostgresPort, config.Database, config.Schema)
 
-	log.Printf("Flyway migrations path: %s", config.MigrationsPath)
-	log.Printf("Flyway connecting to database at: %s", dbUrl)
+	slog.Info("Flyway migration configuration", "migrations_path", config.MigrationsPath)
+	slog.Info("Flyway database target", "url", dbUrl)
 
 	req := buildFlywayContainerRequest(networks, config, dbUrl)
 
@@ -89,7 +89,7 @@ func buildFlywayContainerRequest(networks []string, config PostgresConfig, dbUrl
 
 // waitForMigrationCompletion waits for the Flyway container to finish running
 func waitForMigrationCompletion(ctx context.Context, container testcontainers.Container) error {
-	log.Println("Waiting for Flyway migrations to complete...")
+	slog.Info("waiting for Flyway migrations to complete")
 	waitCtx, cancel := context.WithTimeout(ctx, FlywayMigrationTimeout)
 	defer cancel()
 
@@ -133,12 +133,12 @@ func verifyMigrationSuccess(ctx context.Context, container testcontainers.Contai
 func printContainerLogs(ctx context.Context, container testcontainers.Container) {
 	logs, err := container.Logs(ctx)
 	if err != nil {
-		log.Printf("Warning: failed to get Flyway logs: %v", err)
+		slog.Warn("failed to get Flyway logs", "error", err)
 		return
 	}
 	defer func() {
 		if closeErr := logs.Close(); closeErr != nil {
-			log.Printf("Warning: failed to close Flyway logs: %v", closeErr)
+			slog.Warn("failed to close Flyway logs", "error", closeErr)
 		}
 	}()
 
@@ -146,7 +146,7 @@ func printContainerLogs(ctx context.Context, container testcontainers.Container)
 	for {
 		n, readErr := logs.Read(buf)
 		if n > 0 {
-			log.Printf("Flyway: %s", string(buf[:n]))
+			slog.Info("Flyway output", "chunk", string(buf[:n]))
 		}
 		if readErr != nil {
 			break

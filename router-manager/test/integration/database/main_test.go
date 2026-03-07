@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"testing"
 
@@ -13,13 +13,15 @@ import (
 var testEnv *config.TestEnvironment
 
 func TestMain(m *testing.M) {
+	config.ConfigureTestLogging()
 	ctx := context.Background()
 
 	// Setup: Start containers once for the whole integration suite
 	var err error
 	testEnv, err = intconfig.SetupIntegrationTest(ctx)
 	if err != nil {
-		log.Fatalf("Failed to setup integration test suite: %v", err)
+		slog.Error("failed to setup integration test suite", "error", err)
+		os.Exit(1)
 	}
 
 	// Run all tests in the package

@@ -1,10 +1,12 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net"
+	"os"
 	"router-manager/internal/config"
 	"router-manager/internal/database"
+	"router-manager/internal/logging"
 	"router-manager/internal/server"
 	"router-manager/internal/service"
 	pb "router-manager/proto"
@@ -14,11 +16,13 @@ import (
 
 func main() {
 	cfg := config.Load()
+	logging.ConfigureDefault(cfg.Logging)
 
 	// Initialize database connection
 	db, err := database.New(cfg.Database.ConnectionString())
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -28,26 +32,30 @@ func main() {
 	// Setup gRPC server
 	lis, err := net.Listen("tcp", cfg.Server.Port)
 	if err != nil {
-		log.Fatalf("Failed to listen on port %s: %v", cfg.Server.Port, err)
+		slog.Error("failed to listen", "port", cfg.Server.Port, "error", err)
+		os.Exit(1)
 	}
 
 	grpcServer := grpc.NewServer()
 	routerServer := server.NewRouterServer(routerService)
 	pb.RegisterRouterServiceServer(grpcServer, routerServer)
 
-	log.Println("========================================")
-	log.Printf("gRPC Server started successfully!")
-	log.Printf("Listening on port %s", cfg.Server.Port)
-	log.Printf("️Database: %s@%s:%s/%s (schema: %s)", cfg.Database.User, cfg.Database.Host, cfg.Database.Port, cfg.Database.Database, cfg.Database.Schema)
-	log.Println("========================================")
-	log.Println("Available endpoints:")
-	log.Println("  POST /api.v1.RouterService/SubmitCommand")
-	log.Println("  POST /api.v1.RouterService/PollOutstandingCommands")
-	log.Println("  POST /api.v1.RouterService/AcknowledgeCommand")
-	log.Println("========================================")
-	log.Println("Waiting for requests...")
+	slog.Info("gRPC server started",
+		"port", cfg.Server.Port,
+		"db_user", cfg.Database.User,
+		"db_host", cfg.Database.Host,
+		"db_port", cfg.Database.Port,
+		"db_name", cfg.Database.Database,
+		"db_schema", cfg.Database.Schema,
+	)
+	slog.Info("available endpoints",
+		"submit_command", "POST /api.v1.RouterService/SubmitCommand",
+		"poll_outstanding_commands", "POST /api.v1.RouterService/PollOutstandingCommands",
+		"acknowledge_command", "POST /api.v1.RouterService/AcknowledgeCommand",
+	)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+		slog.Error("failed to serve gRPC server", "error", err)
+		os.Exit(1)
 	}
 }

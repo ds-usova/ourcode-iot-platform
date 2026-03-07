@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -41,7 +41,7 @@ func TestTouchRouter_WhenRouterExist_UpdateLastSeenAt(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// When: Touch router
-	log.Println("Touching router...")
+	slog.Info("touching router", "router_id", routerTestID)
 	if err := env.DB.Routers().TouchRouter(ctx, routerTestID); err != nil {
 		t.Fatalf("Failed to touch router: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestTouchRouter_WhenRouterDoesNotExist_ReturnError(t *testing.T) {
 	nonExistentRouterID := "00000000-0000-0000-0000-000000009999"
 
 	// When: Touch non-existent router
-	log.Println("Touching non-existent router...")
+	slog.Info("touching non-existent router", "router_id", nonExistentRouterID)
 	err := env.DB.Routers().TouchRouter(ctx, nonExistentRouterID)
 
 	// Then: ErrRouterNotFound is returned

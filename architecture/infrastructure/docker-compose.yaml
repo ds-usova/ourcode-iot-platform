@@ -709,6 +709,8 @@ services:
       DB_SCHEMA: ${ROUTER_MANAGER_DB_SCHEMA}
       DB_SSLMODE: disable
       SERVER_PORT: ":50051"
+      LOG_LEVEL: ${ROUTER_MANAGER_LOG_LEVEL:-debug}
+      LOG_FORMAT: ${ROUTER_MANAGER_LOG_FORMAT:-text}
 
   failed-events-processor:
       image: failed-events-processor:latest

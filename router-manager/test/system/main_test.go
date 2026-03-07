@@ -2,23 +2,26 @@ package system
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"testing"
 
+	testconfig "router-manager/test/config"
 	sysconfig "router-manager/test/system/config"
 )
 
 var testEnv *sysconfig.SystemTestEnvironment
 
 func TestMain(m *testing.M) {
+	testconfig.ConfigureTestLogging()
 	ctx := context.Background()
 
 	// Setup: Start containers once for the whole package
 	var err error
 	testEnv, err = sysconfig.SetupSystemTest(ctx)
 	if err != nil {
-		log.Fatalf("Failed to setup test suite: %v", err)
+		slog.Error("failed to setup test suite", "error", err)
+		os.Exit(1)
 	}
 
 	// Run all tests in the package

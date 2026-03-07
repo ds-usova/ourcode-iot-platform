@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"router-manager/internal/database"
 	"router-manager/internal/service"
 	pb "router-manager/proto"
@@ -29,29 +29,28 @@ func NewRouterServer(routerService RouterServiceInterface) *RouterServer {
 }
 
 func (s *RouterServer) SendCommand(ctx context.Context, req *pb.SendCommandRequest) (*pb.SendCommandResponse, error) {
-	log.Println("========================================")
-	log.Println("Received SubmitCommand request:")
-
 	routerID := req.GetRouterId()
 	if routerID == "" {
-		log.Printf("  Router ID: <ALL ROUTERS>")
-	} else {
-		log.Printf("  Router ID: %s", routerID)
+		routerID = "<ALL ROUTERS>"
 	}
 
-	log.Printf("  Command Type: %s", req.GetCommandType())
-	log.Printf("  Payload: %s", req.GetPayload())
-	log.Println("========================================")
+	slog.Info("received SubmitCommand request",
+		"router_id", routerID,
+		"command_type", req.GetCommandType(),
+	)
+	slog.Debug("SubmitCommand payload", "payload", req.GetPayload())
 
-	result, err := s.routerService.SubmitCommand(ctx, routerID, req.GetCommandType(), req.GetPayload())
+	result, err := s.routerService.SubmitCommand(ctx, req.GetRouterId(), req.GetCommandType(), req.GetPayload())
 	if err != nil {
 		if errors.Is(err, database.ErrRouterNotFound) {
 			notFoundMessage := "no routers found to send the command"
-			if routerID != "" {
-				notFoundMessage = fmt.Sprintf("router with ID %s not found", routerID)
+			if req.GetRouterId() != "" {
+				notFoundMessage = fmt.Sprintf("router with ID %s not found", req.GetRouterId())
 			}
+			slog.Warn("submit command rejected", "router_id", req.GetRouterId(), "error", err)
 			return nil, status.Error(codes.InvalidArgument, notFoundMessage)
 		}
+		slog.Error("submit command failed", "router_id", req.GetRouterId(), "error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -59,7 +58,7 @@ func (s *RouterServer) SendCommand(ctx context.Context, req *pb.SendCommandReque
 	if result.IsBroadcast {
 		message = fmt.Sprintf("Command sent to %d router(s)", result.RoutersAffected)
 	} else {
-		message = fmt.Sprintf("Command sent to router %s", routerID)
+		message = fmt.Sprintf("Command sent to router %s", req.GetRouterId())
 	}
 
 	return &pb.SendCommandResponse{
@@ -69,16 +68,15 @@ func (s *RouterServer) SendCommand(ctx context.Context, req *pb.SendCommandReque
 }
 
 func (s *RouterServer) PollOutstandingCommands(ctx context.Context, req *pb.PollOutstandingCommandsRequest) (*pb.PollOutstandingCommandsResponse, error) {
-	log.Printf("=========================================")
-	log.Println("Received PollOutstandingCommands request:")
-	log.Printf("  Router ID: %s", req.GetRouterId())
-	log.Println("=========================================")
+	slog.Info("received PollOutstandingCommands request", "router_id", req.GetRouterId())
 
 	commands, err := s.routerService.PollCommands(ctx, req.GetRouterId())
 	if err != nil {
 		if errors.Is(err, database.ErrRouterNotFound) {
+			slog.Warn("poll outstanding commands rejected", "router_id", req.GetRouterId(), "error", err)
 			return nil, status.Error(codes.InvalidArgument, "router not found")
 		}
+		slog.Error("poll outstanding commands failed", "router_id", req.GetRouterId(), "error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -95,25 +93,27 @@ func (s *RouterServer) PollOutstandingCommands(ctx context.Context, req *pb.Poll
 		Commands: grpcCommands,
 	}
 
-	log.Printf("Sending response with %d commands", len(response.Commands))
+	slog.Info("sending PollOutstandingCommands response", "router_id", req.GetRouterId(), "command_count", len(response.Commands))
 	return response, nil
 }
 
 func (s *RouterServer) AcknowledgeCommand(ctx context.Context, req *pb.AcknowledgeCommandRequest) (*pb.AcknowledgeCommandResponse, error) {
-	log.Printf("=========================================")
-	log.Println("Received AcknowledgeCommand request:")
-	log.Printf("  Router ID: %s", req.GetRouterId())
-	log.Printf("  Command ID: %s", req.GetCommandId())
-	log.Println("=========================================")
+	slog.Info("received AcknowledgeCommand request",
+		"router_id", req.GetRouterId(),
+		"command_id", req.GetCommandId(),
+	)
 
 	err := s.routerService.AcknowledgeCommand(ctx, req.GetCommandId(), req.GetRouterId())
 	if err != nil {
 		if errors.Is(err, database.ErrRouterNotFound) {
+			slog.Warn("acknowledge command rejected: router not found", "router_id", req.GetRouterId(), "error", err)
 			return nil, status.Error(codes.InvalidArgument, "router not found")
 		}
 		if errors.Is(err, database.ErrSentCommandNotFound) {
+			slog.Warn("acknowledge command rejected: sent command not found", "router_id", req.GetRouterId(), "command_id", req.GetCommandId(), "error", err)
 			return nil, status.Error(codes.InvalidArgument, "sent command not found")
 		}
+		slog.Error("acknowledge command failed", "router_id", req.GetRouterId(), "command_id", req.GetCommandId(), "error", err)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -121,6 +121,6 @@ func (s *RouterServer) AcknowledgeCommand(ctx context.Context, req *pb.Acknowled
 		Message: "Command acknowledged successfully.",
 	}
 
-	log.Printf("Acknowledged command %s for router %s", req.GetCommandId(), req.GetRouterId())
+	slog.Info("command acknowledged", "command_id", req.GetCommandId(), "router_id", req.GetRouterId())
 	return response, nil
 }

@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,7 +24,7 @@ func (env *TestEnvironment) CreateTestRouter(routerID, serialNumber string) erro
 		return fmt.Errorf("failed to insert test router: %w", err)
 	}
 
-	log.Printf("Successfully created test router: ID=%s, SerialNumber=%s", routerID, serialNumber)
+	slog.Info("created test router", "router_id", routerID, "serial_number", serialNumber)
 	return nil
 }
 
